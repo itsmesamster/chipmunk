@@ -36,12 +36,16 @@ jobs:
       matrix:
         os: [ubuntu-20.04, windows-latest, macOS-latest]
         arch: [aarch64, none]
+        rust: [stable]
         exclude:
           - os: windows-latest
-            arch: [aarch64, none]
+            arch: aarch64
+          - os: windows-latest
+            arch: none
           - os: macOS-latest
-            arch: [aarch64, none]
-        rust: [stable]
+            arch: aarch64
+          - os: macOS-latest
+            arch: none
     steps:
       - uses: uraimo/run-on-arch-action@v2
         if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
