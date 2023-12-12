@@ -29,12 +29,6 @@ jobs:
     name: Build release
     # needs: create_release
     runs-on: ${{ matrix.os }}
-      - uses: uraimo/run-on-arch-action@v2
-        if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
-        with:
-          arch: aarch64
-          distro: ubuntu_latest
-          githubToken: ${{ github.token }}
     env:
       PUBLISH_FOR_PULL_REQUEST: 1
       CSC_FOR_PULL_REQUEST: true
@@ -114,6 +108,12 @@ jobs:
           arch: aarch64
           distro: ubuntu_latest
           githubToken: ${{ github.token }}
+          setup: |
+            sudo apt-get install -y libudev-dev
+            gem install dotenv
+            gem install json
+            cargo install nj-cli
+            curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
           run: |
             uname -a
             cd ./application/holder
