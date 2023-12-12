@@ -18,6 +18,12 @@ module OS
     OS.unix? && !OS.mac?
   end
 
+  def self.arm64?
+    arch = `uname -m`
+    puts "arch value is #{arch.strip.inspect}"
+    arch.strip == 'aarch64' || arch.strip == 'arm64'
+  end
+
   def self.executable(filename)
     exe = if OS.windows?
             '.exe'

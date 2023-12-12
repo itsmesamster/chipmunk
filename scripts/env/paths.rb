@@ -7,6 +7,8 @@ module Paths
   def self.release_build_folder
     if OS.windows?
       'win-unpacked'
+    elsif OS.linux? && OS.arm64?
+      'linux-arm64-unpacked'
     elsif OS.linux?
       'linux-unpacked'
     else
@@ -17,6 +19,8 @@ module Paths
   def self.release_bin_folder
     if OS.windows?
       'win-unpacked'
+    elsif OS.linux? && OS.arm64?
+      'linux-arm64-unpacked'
     elsif OS.linux?
       'linux-unpacked'
     else
@@ -27,6 +31,8 @@ module Paths
   def self.release_resources_folder
     if OS.windows?
       'win-unpacked/Resources'
+    elsif OS.linux? && OS.arm64?
+      'linux-arm64-unpacked/Resources'
     elsif OS.linux?
       'linux-unpacked/Resources'
     else
