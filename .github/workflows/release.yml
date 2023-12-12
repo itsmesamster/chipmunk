@@ -45,11 +45,9 @@ jobs:
             base_image: riscv64/busybox
         rust: [stable]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
       - uses: uraimo/run-on-arch-action@v2
         name: Fetch architecture
-        if: {{matrix.os == 'ubuntu-20.04' && matrix.arch == 'aarch64'}}
+      - if: {{matrix.os == ubuntu-20.04 && matrix.arch == aarch64}}
         id: get_uname
         with:
           arch: aarch64
@@ -58,6 +56,8 @@ jobs:
           run: |
             uname -a
             echo ::set-output name=uname::$(uname -a)
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: libudev-dev
         if: runner.os == 'Linux'
         run: sudo apt-get install -y libudev-dev
