@@ -175,17 +175,7 @@ jobs:
           distro: ubuntu_latest
           githubToken: ${{ github.token }}
           run: |
-            uname -a
-            sudo apt-get install -y libudev-dev
-            sudo apt-get install ruby-full
-            sudo apt-get install nodejs
-            curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh
-            gem install dotenv
-            gem install json
-            cargo install nj-cli
-            curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-            cd ./application/holder
-            rake release:prod --trace
+            bash build_arm64.sh
         env:
           KEYCHAIN_NAME: "build.keychain"
           CSC_LINK: ${{ secrets.CSC_LINK }}
