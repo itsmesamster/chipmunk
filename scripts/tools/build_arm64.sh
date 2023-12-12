@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eux
 uname -a
+sudo apt-get update
+sudo apt-get install curl
 sudo apt-get install -y libudev-dev
 sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 # sudo apt-get install ruby-full
