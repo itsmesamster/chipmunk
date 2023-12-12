@@ -104,13 +104,14 @@ jobs:
       - uses: uraimo/run-on-arch-action@v2
         name: build release arm64
         if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
-        working-directory: ./application/holder
+        # working-directory: ./application/holder
         with:
           arch: aarch64
           distro: ubuntu_latest
           githubToken: ${{ github.token }}
           run: |
             uname -a
+            cd ./application/holder
             rake release:prod --trace
         env:
           KEYCHAIN_NAME: "build.keychain"
