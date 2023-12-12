@@ -5,7 +5,7 @@ uname -a
 sudo apt-get install -y curl
 sudo apt-get install -y libudev-dev
 sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
-# sudo apt-get install ruby-full
+sudo apt-get install -y ruby-full
 sudo apt-get install -y nodejs
 curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
 source $HOME/.cargo/env
