@@ -154,19 +154,19 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - name: install ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.0"
-          bundler-cache: true
-      - name: install node
-        uses: actions/setup-node@master
-        with:
-          node-version: "current"
-      - name: install rust
-        uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: stable
+      # - name: install ruby
+      #   uses: ruby/setup-ruby@v1
+      #   with:
+      #     ruby-version: "3.0"
+      #     bundler-cache: true
+      # - name: install node
+      #   uses: actions/setup-node@master
+      #   with:
+      #     node-version: "current"
+      # - name: install rust
+      #   uses: hecrj/setup-rust-action@v1
+      #   with:
+      #     rust-version: stable
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
@@ -177,6 +177,9 @@ jobs:
           run: |
             uname -a
             sudo apt-get install -y libudev-dev
+            sudo apt-get install ruby-full
+            sudo apt-get install nodejs
+            curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh
             gem install dotenv
             gem install json
             cargo install nj-cli
