@@ -177,7 +177,6 @@ jobs:
           run: |
             uname -a
             sudo apt-get install -y libudev-dev
-            sudo apt-get install ruby-full
             gem install dotenv
             gem install json
             cargo install nj-cli
