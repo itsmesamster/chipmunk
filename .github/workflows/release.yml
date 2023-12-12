@@ -48,7 +48,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Fetch architecture
-        if: {{matrix.os == ubuntu-20.04 && matrix.os.arch == aarch64}}
+        if: {{matrix.os == 'ubuntu-20.04' && matrix.os.arch == 'aarch64'}}
         uses: uraimo/run-on-arch-action@v2
         id: get_uname
         with:
