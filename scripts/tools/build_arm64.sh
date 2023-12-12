@@ -7,7 +7,7 @@ sudo apt-get install -y libudev-dev
 sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 # sudo apt-get install ruby-full
 sudo apt-get install -y nodejs
-curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh
+curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
 source $HOME/.cargo/env
 gem install dotenv
 gem install json
