@@ -175,7 +175,7 @@ jobs:
           distro: ubuntu_latest
           githubToken: ${{ github.token }}
           run: |
-            bash build_arm64.sh
+            bash ./scripts/tools/build_arm64.sh
         env:
           KEYCHAIN_NAME: "build.keychain"
           CSC_LINK: ${{ secrets.CSC_LINK }}
