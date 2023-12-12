@@ -110,6 +110,8 @@ jobs:
           githubToken: ${{ github.token }}
           setup: |
             sudo apt-get install -y libudev-dev
+            sudo apt-get install ruby-full
+            sudo apt-get install nodejs
             gem install dotenv
             gem install json
             cargo install nj-cli
