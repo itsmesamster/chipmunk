@@ -35,15 +35,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04, windows-latest, macOS-latest]
-        arch: [aarch64, none]
+        # arch: [aarch64, none]
         rust: [stable]
-        exclude:
-          - os: windows-latest
-            arch: aarch64
-          - os: macOS-latest
-            arch: aarch64
-    permissions:
-      packages: read
+        # exclude:
+        #   - os: windows-latest
+        #     arch: aarch64
+        #   - os: macOS-latest
+        #     arch: aarch64
     steps:
       # - uses: uraimo/run-on-arch-action@v2
       #   if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
@@ -103,40 +101,30 @@ jobs:
             -s \
             -k "$KEYCHAIN_PWD" \
             "$KEYCHAIN_NAME"
-      - uses: uraimo/run-on-arch-action@v2
-        name: build release arm64
-        if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
-        with:
-          arch: aarch64
-          distro: ubuntu_latest
-          githubToken: ${{ github.token }}
-          dockerRunArgs: |
-            --platform linux/amd64
-          setup: |
-            sudo apt-get install -y libudev-dev
-            sudo apt-get install ruby-full
-            sudo apt-get install nodejs
-            gem install dotenv
-            gem install json
-            cargo install nj-cli --force
-            curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-          run: |
-            uname -a
-            cd ./application/holder
-            rake release:prod --trace
-        env:
-          KEYCHAIN_NAME: "build.keychain"
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          APPLEID: ${{ secrets.APPLEID }}
-          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
-          TEAMID: ${{ secrets.TEAMID }}
-          SIGNING_ID: ${{ secrets.SIGNING_ID }}
-          KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - uses: uraimo/run-on-arch-action@v2
+      #   name: build release arm64
+      #   if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
+      #   with:
+      #     arch: aarch64
+      #     distro: ubuntu_latest
+      #     githubToken: ${{ github.token }}
+      #     run: |
+      #       uname -a
+      #       cd ./application/holder
+      #       rake release:prod --trace
+      #   env:
+      #     KEYCHAIN_NAME: "build.keychain"
+      #     CSC_LINK: ${{ secrets.CSC_LINK }}
+      #     CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      #     APPLEID: ${{ secrets.APPLEID }}
+      #     APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+      #     TEAMID: ${{ secrets.TEAMID }}
+      #     SIGNING_ID: ${{ secrets.SIGNING_ID }}
+      #     KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: build release
         working-directory: ./application/holder
-        if: matrix.arch != 'aarch64'
+        # if: matrix.arch != 'aarch64'
         run: rake release:prod --trace
         env:
           KEYCHAIN_NAME: "build.keychain"
@@ -160,6 +148,56 @@ jobs:
       #     release-tag: ${{ github.ref_name }}
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build_release_arm64:
+    name: Build release ARM64
+    # needs: create_release
+    runs-on: ubuntu-22.04
+    name: Build on ubuntu-22.04 arm64
+    steps:
+      - uses: actions/checkout@v3
+      - name: install ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.0"
+          bundler-cache: true
+      - name: install node
+        uses: actions/setup-node@master
+        with:
+          node-version: "current"
+      - name: install rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: stable
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run commands
+        id: runcmd
+        with:
+          arch: aarch64
+          distro: ubuntu_latest
+          githubToken: ${{ github.token }}
+          run: |
+            uname -a
+            sudo apt-get install -y libudev-dev
+            sudo apt-get install ruby-full
+            gem install dotenv
+            gem install json
+            cargo install nj-cli
+            curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+            cd ./application/holder
+            rake release:prod --trace
+        env:
+          KEYCHAIN_NAME: "build.keychain"
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLEID: ${{ secrets.APPLEID }}
+          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+          TEAMID: ${{ secrets.TEAMID }}
+          SIGNING_ID: ${{ secrets.SIGNING_ID }}
+          KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: list release files
+        working-directory: ./application/holder/release
+        run: ls
   # invoke_package_distribution:
   #   name: Invoke chipmunk package creation and distribution for different package managers
   #   needs: build_release
