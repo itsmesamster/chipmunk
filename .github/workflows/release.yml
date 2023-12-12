@@ -52,7 +52,7 @@ jobs:
         rust: [stable]
     steps:
       - uses: uraimo/run-on-arch-action@v2
-        if: matrix.arch == 'aarch64'
+        if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
         with:
           arch: aarch64
           distro: ubuntu_latest
