@@ -151,7 +151,7 @@ jobs:
   build_release_arm64:
     name: Build release ARM64
     # needs: create_release
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       # - name: install ruby
@@ -172,9 +172,10 @@ jobs:
         id: runcmd
         with:
           arch: aarch64
-          distro: ubuntu_latest
+          distro: ubuntu20.04
           githubToken: ${{ github.token }}
           run: |
+            apt update && apt install sudo
             bash ./scripts/tools/build_arm64.sh
         env:
           KEYCHAIN_NAME: "build.keychain"
