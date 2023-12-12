@@ -2,7 +2,7 @@
 set -eux
 uname -a
 sudo apt-get install -y libudev-dev
-sudo apt-get install ruby-full
+# sudo apt-get install ruby-full
 sudo apt-get install nodejs
 curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh
 source $HOME/.cargo/env
