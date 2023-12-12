@@ -152,7 +152,6 @@ jobs:
     name: Build release ARM64
     # needs: create_release
     runs-on: ubuntu-22.04
-    name: Build on ubuntu-22.04 arm64
     steps:
       - uses: actions/checkout@v3
       - name: install ruby
