@@ -51,9 +51,9 @@ jobs:
           arch: aarch64
           distro: ubuntu_latest
           githubToken: ${{ github.token }}
-        run: |
-          uname -a
-          echo ::set-output name=uname::$(uname -a)
+          run: |
+            uname -a
+            echo ::set-output name=uname::$(uname -a)
       - name: Checkout
         uses: actions/checkout@v3
       - name: libudev-dev
