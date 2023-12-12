@@ -43,15 +43,15 @@ jobs:
           - os: macOS-latest
             arch: aarch64
     steps:
-      - uses: uraimo/run-on-arch-action@v2
-        if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
-        with:
-          arch: aarch64
-          distro: ubuntu_latest
-          githubToken: ${{ github.token }}
-          run: |
-            uname -a
-            echo ::set-output name=uname::$(uname -a)
+      # - uses: uraimo/run-on-arch-action@v2
+      #   if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
+      #   with:
+      #     arch: aarch64
+      #     distro: ubuntu_latest
+      #     githubToken: ${{ github.token }}
+      #     run: |
+      #       uname -a
+      #       echo ::set-output name=uname::$(uname -a)
       - name: Checkout
         uses: actions/checkout@v3
       - name: libudev-dev
@@ -101,8 +101,30 @@ jobs:
             -s \
             -k "$KEYCHAIN_PWD" \
             "$KEYCHAIN_NAME"
+      - uses: uraimo/run-on-arch-action@v2
+        name: build release arm64
+        working-directory: ./application/holder
+        if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
+        with:
+          arch: aarch64
+          distro: ubuntu_latest
+          githubToken: ${{ github.token }}
+          run: |
+            uname -a
+            rake release:prod --trace
+        env:
+          KEYCHAIN_NAME: "build.keychain"
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLEID: ${{ secrets.APPLEID }}
+          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+          TEAMID: ${{ secrets.TEAMID }}
+          SIGNING_ID: ${{ secrets.SIGNING_ID }}
+          KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: build release
         working-directory: ./application/holder
+        if: matrix.arch != 'aarch64'
         run: rake release:prod --trace
         env:
           KEYCHAIN_NAME: "build.keychain"
