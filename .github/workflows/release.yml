@@ -195,7 +195,7 @@ jobs:
   build_release_test:
     name: Build release
     # needs: create_release
-    runs-on: gh-sh-arm64-runner
+    runs-on: self-hosted
     env:
       PUBLISH_FOR_PULL_REQUEST: 1
       CSC_FOR_PULL_REQUEST: true
