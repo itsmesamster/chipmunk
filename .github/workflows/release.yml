@@ -209,6 +209,8 @@ jobs:
           sudo gpg --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
           pwd
           sudo yum install -y ruby
+          rake clean
+          rake lint:all
       - name: install ruby:gem::dotenv
         run: sudo gem install dotenv
       - name: install ruby:gem::json
@@ -226,10 +228,8 @@ jobs:
       - name: install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: build release
+        working-directory: ./application/holder
         run: |
-          rake clean
-          rake lint:all
-          cd $(pwd)/application/holder
           rake release:prod --trace
         env:
           KEYCHAIN_NAME: "build.keychain"
