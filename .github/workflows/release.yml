@@ -212,17 +212,9 @@ jobs:
           source $HOME/.rvm/scripts/rvm
           rvm --version
           whoami
+          pwd
           sudo yum install -y ruby
           ruby --version
-      # - name: install ruby
-      #   run: |
-      #     rvm install 3.2
-      #     rvm use 3.2 --default
-      #     ruby --version
-        # uses: ruby/setup-ruby@v1
-        # with:
-        #   ruby-version: "3.0"
-        #   bundler-cache: true
       - name: install ruby:gem::dotenv
         run: sudo gem install dotenv
       - name: install ruby:gem::json
@@ -239,32 +231,12 @@ jobs:
         run: cargo install nj-cli
       - name: install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-      - name: setup keychain for signing and notarising
-        if: runner.os == 'macOS'
-        env:
-          KEYCHAIN_NAME: "build.keychain"
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
-        run: |
-          security create-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_NAME"
-          security default-keychain -s "$KEYCHAIN_NAME"
-          certfile="${HOME}/buildcert.p12"
-          echo "$CSC_LINK" | base64 -d > "$certfile"
-          security import \
-            "$certfile" \
-            -P "$CSC_KEY_PASSWORD" \
-            -A \
-            -k "$KEYCHAIN_NAME"
-          rm "$certfile"
-          security set-key-partition-list \
-            -S 'apple:' \
-            -s \
-            -k "$KEYCHAIN_PWD" \
-            "$KEYCHAIN_NAME"
       - name: build release
-        working-directory: ./application/holder
-        run: rake release:prod --trace
+        run: |
+          rake clean
+          rake lint:all
+          cd $(pwd)/application/holder
+          rake release:prod --trace
         env:
           KEYCHAIN_NAME: "build.keychain"
           CSC_LINK: ${{ secrets.CSC_LINK }}
