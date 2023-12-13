@@ -207,11 +207,11 @@ jobs:
         run: |
           sudo yum update -y
           sudo yum install -y curl gpg gcc gcc-c++ make libyaml-devel openssl-devel readline-devel zlib-devel libudev-devel
-          whoami
           gpg --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
           curl -sSL https://get.rvm.io | bash -s stable
-          source ~/.rvm/scripts/rvm
+          source $HOME/.rvm/scripts/rvm
           rvm --version
+          whoami
       - name: install ruby
         run: |
           rvm install 3.2
