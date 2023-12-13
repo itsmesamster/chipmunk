@@ -25,33 +25,181 @@ jobs:
   #         prerelease: true
   #         tag_name: ${{ github.ref_name }}
   #         name: ${{ github.ref_name }}
-  build_release:
+  # build_release:
+  #   name: Build release
+  #   # needs: create_release
+  #   runs-on: ${{ matrix.os }}
+  #   env:
+  #     PUBLISH_FOR_PULL_REQUEST: 1
+  #     CSC_FOR_PULL_REQUEST: true
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-20.04, windows-latest, macOS-latest]
+  #       # arch: [aarch64, none]
+  #       rust: [stable]
+  #       # exclude:
+  #       #   - os: windows-latest
+  #       #     arch: aarch64
+  #       #   - os: macOS-latest
+  #       #     arch: aarch64
+  #   steps:
+  #     # - uses: uraimo/run-on-arch-action@v2
+  #     #   if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
+  #     #   with:
+  #     #     arch: aarch64
+  #     #     distro: ubuntu_latest
+  #     #     githubToken: ${{ github.token }}
+  #     #     run: |
+  #     #       uname -a
+  #     #       echo ::set-output name=uname::$(uname -a)
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #     - name: libudev-dev
+  #       if: runner.os == 'Linux'
+  #       run: sudo apt-get install -y libudev-dev
+  #     - name: install ruby
+  #       uses: ruby/setup-ruby@v1
+  #       with:
+  #         ruby-version: "3.0"
+  #         bundler-cache: true
+  #     - name: install ruby:gem::dotenv
+  #       run: gem install dotenv
+  #     - name: install ruby:gem::json
+  #       run: gem install json
+  #     - name: install node
+  #       uses: actions/setup-node@master
+  #       with:
+  #         node-version: "current"
+  #     - name: install rust
+  #       uses: hecrj/setup-rust-action@v1
+  #       with:
+  #         rust-version: ${{ matrix.rust }}
+  #     - name: cargo install nj-cli
+  #       run: cargo install nj-cli
+  #     - name: install wasm-pack
+  #       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+  #     - name: setup keychain for signing and notarising
+  #       if: runner.os == 'macOS'
+  #       env:
+  #         KEYCHAIN_NAME: "build.keychain"
+  #         CSC_LINK: ${{ secrets.CSC_LINK }}
+  #         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+  #         KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+  #       run: |
+  #         security create-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_NAME"
+  #         security default-keychain -s "$KEYCHAIN_NAME"
+  #         certfile="${HOME}/buildcert.p12"
+  #         echo "$CSC_LINK" | base64 -d > "$certfile"
+  #         security import \
+  #           "$certfile" \
+  #           -P "$CSC_KEY_PASSWORD" \
+  #           -A \
+  #           -k "$KEYCHAIN_NAME"
+  #         rm "$certfile"
+  #         security set-key-partition-list \
+  #           -S 'apple:' \
+  #           -s \
+  #           -k "$KEYCHAIN_PWD" \
+  #           "$KEYCHAIN_NAME"
+  #     # - uses: uraimo/run-on-arch-action@v2
+  #     #   name: build release arm64
+  #     #   if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
+  #     #   with:
+  #     #     arch: aarch64
+  #     #     distro: ubuntu_latest
+  #     #     githubToken: ${{ github.token }}
+  #     #     run: |
+  #     #       uname -a
+  #     #       cd ./application/holder
+  #     #       rake release:prod --trace
+  #     #   env:
+  #     #     KEYCHAIN_NAME: "build.keychain"
+  #     #     CSC_LINK: ${{ secrets.CSC_LINK }}
+  #     #     CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+  #     #     APPLEID: ${{ secrets.APPLEID }}
+  #     #     APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+  #     #     TEAMID: ${{ secrets.TEAMID }}
+  #     #     SIGNING_ID: ${{ secrets.SIGNING_ID }}
+  #     #     KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+  #     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: build release
+  #       working-directory: ./application/holder
+  #       # if: matrix.arch != 'aarch64'
+  #       run: rake release:prod --trace
+  #       env:
+  #         KEYCHAIN_NAME: "build.keychain"
+  #         CSC_LINK: ${{ secrets.CSC_LINK }}
+  #         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+  #         APPLEID: ${{ secrets.APPLEID }}
+  #         APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+  #         TEAMID: ${{ secrets.TEAMID }}
+  #         SIGNING_ID: ${{ secrets.SIGNING_ID }}
+  #         KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: list release files
+  #       working-directory: ./application/holder/release
+  #       run: ls
+      # - name: upload files
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   uses: AButler/upload-release-assets@v2.0
+      #   with:
+      #     files: "./application/holder/release/*.tgz;./application/holder/release/*.zip"
+      #     repo-token: ${{ secrets.GITHUB_TOKEN }}
+      #     release-tag: ${{ github.ref_name }}
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # build_release_arm64:
+  #   name: Build release ARM64
+  #   # needs: create_release
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     # - name: install ruby
+  #     #   uses: ruby/setup-ruby@v1
+  #     #   with:
+  #     #     ruby-version: "3.0"
+  #     #     bundler-cache: true
+  #     # - name: install node
+  #     #   uses: actions/setup-node@master
+  #     #   with:
+  #     #     node-version: "current"
+  #     # - name: install rust
+  #     #   uses: hecrj/setup-rust-action@v1
+  #     #   with:
+  #     #     rust-version: stable
+  #     - uses: uraimo/run-on-arch-action@v2
+  #       name: Run commands
+  #       id: runcmd
+  #       with:
+  #         arch: aarch64
+  #         distro: ubuntu20.04
+  #         githubToken: ${{ github.token }}
+  #         install: |
+  #           apt update && apt install sudo
+  #           sudo apt-get install -y git curl autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev libudev-dev
+  #           sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
+  #           sudo apt-get install -y ruby-full
+  #           sudo apt-get install -y nodejs
+  #           curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+  #           source "$HOME/.cargo/env"
+  #           gem install dotenv
+  #           gem install json
+  #           cargo install nj-cli
+  #           cargo install wasm-pack
+  #         run: |
+  #           cd ./application/holder
+  #           rake release:prod --trace
+  #     - name: list release files
+  #       working-directory: ./application/holder/release
+  #       run: ls
+  build_release_test:
     name: Build release
     # needs: create_release
-    runs-on: ${{ matrix.os }}
+    runs-on: gh-sh-arm64-runner
     env:
       PUBLISH_FOR_PULL_REQUEST: 1
       CSC_FOR_PULL_REQUEST: true
-    strategy:
-      matrix:
-        os: [ubuntu-20.04, windows-latest, macOS-latest]
-        # arch: [aarch64, none]
-        rust: [stable]
-        # exclude:
-        #   - os: windows-latest
-        #     arch: aarch64
-        #   - os: macOS-latest
-        #     arch: aarch64
     steps:
-      # - uses: uraimo/run-on-arch-action@v2
-      #   if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
-      #   with:
-      #     arch: aarch64
-      #     distro: ubuntu_latest
-      #     githubToken: ${{ github.token }}
-      #     run: |
-      #       uname -a
-      #       echo ::set-output name=uname::$(uname -a)
       - name: Checkout
         uses: actions/checkout@v3
       - name: libudev-dev
@@ -101,30 +249,8 @@ jobs:
             -s \
             -k "$KEYCHAIN_PWD" \
             "$KEYCHAIN_NAME"
-      # - uses: uraimo/run-on-arch-action@v2
-      #   name: build release arm64
-      #   if: matrix.os=='ubuntu-20.04' && matrix.arch == 'aarch64'
-      #   with:
-      #     arch: aarch64
-      #     distro: ubuntu_latest
-      #     githubToken: ${{ github.token }}
-      #     run: |
-      #       uname -a
-      #       cd ./application/holder
-      #       rake release:prod --trace
-      #   env:
-      #     KEYCHAIN_NAME: "build.keychain"
-      #     CSC_LINK: ${{ secrets.CSC_LINK }}
-      #     CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-      #     APPLEID: ${{ secrets.APPLEID }}
-      #     APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
-      #     TEAMID: ${{ secrets.TEAMID }}
-      #     SIGNING_ID: ${{ secrets.SIGNING_ID }}
-      #     KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: build release
         working-directory: ./application/holder
-        # if: matrix.arch != 'aarch64'
         run: rake release:prod --trace
         env:
           KEYCHAIN_NAME: "build.keychain"
@@ -148,50 +274,6 @@ jobs:
       #     release-tag: ${{ github.ref_name }}
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  build_release_arm64:
-    name: Build release ARM64
-    # needs: create_release
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v3
-      # - name: install ruby
-      #   uses: ruby/setup-ruby@v1
-      #   with:
-      #     ruby-version: "3.0"
-      #     bundler-cache: true
-      # - name: install node
-      #   uses: actions/setup-node@master
-      #   with:
-      #     node-version: "current"
-      # - name: install rust
-      #   uses: hecrj/setup-rust-action@v1
-      #   with:
-      #     rust-version: stable
-      - uses: uraimo/run-on-arch-action@v2
-        name: Run commands
-        id: runcmd
-        with:
-          arch: aarch64
-          distro: ubuntu20.04
-          githubToken: ${{ github.token }}
-          install: |
-            apt update && apt install sudo
-            sudo apt-get install -y git curl autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev libudev-dev
-            sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
-            sudo apt-get install -y ruby-full
-            sudo apt-get install -y nodejs
-            curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
-            source "$HOME/.cargo/env"
-            gem install dotenv
-            gem install json
-            cargo install nj-cli
-            cargo install wasm-pack
-          run: |
-            cd ./application/holder
-            rake release:prod --trace
-      - name: list release files
-        working-directory: ./application/holder/release
-        run: ls
   # invoke_package_distribution:
   #   name: Invoke chipmunk package creation and distribution for different package managers
   #   needs: build_release
