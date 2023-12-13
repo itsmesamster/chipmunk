@@ -184,7 +184,7 @@ jobs:
             source "$HOME/.cargo/env"
             gem install dotenv
             gem install json
-            cargo install -- -y nj-cli
+            cargo install nj-cli
             curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -- -y
           run: |
             cd ./application/holder
