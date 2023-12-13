@@ -206,10 +206,11 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo yum install -y libudev-devel
       - name: install ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.0"
-          bundler-cache: true
+        run: sudo yum install -y ruby
+        # uses: ruby/setup-ruby@v1
+        # with:
+        #   ruby-version: "3.0"
+        #   bundler-cache: true
       - name: install ruby:gem::dotenv
         run: gem install dotenv
       - name: install ruby:gem::json
