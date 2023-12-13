@@ -212,11 +212,14 @@ jobs:
           source $HOME/.rvm/scripts/rvm
           rvm --version
           whoami
-      - name: install ruby
-        run: |
           rvm install 3.2
           rvm use 3.2 --default
           ruby --version
+      # - name: install ruby
+      #   run: |
+      #     rvm install 3.2
+      #     rvm use 3.2 --default
+      #     ruby --version
         # uses: ruby/setup-ruby@v1
         # with:
         #   ruby-version: "3.0"
