@@ -212,8 +212,7 @@ jobs:
           source $HOME/.rvm/scripts/rvm
           rvm --version
           whoami
-          rvm install 3.0.4
-          rvm use 3.0.4 --default
+          sudo yum install -y ruby
           ruby --version
       # - name: install ruby
       #   run: |
