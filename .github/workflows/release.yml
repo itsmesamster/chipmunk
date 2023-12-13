@@ -224,9 +224,9 @@ jobs:
         #   ruby-version: "3.0"
         #   bundler-cache: true
       - name: install ruby:gem::dotenv
-        run: gem install dotenv
+        run: sudo gem install dotenv
       - name: install ruby:gem::json
-        run: gem install json
+        run: sudo gem install json
       - name: install node
         uses: actions/setup-node@master
         with:
