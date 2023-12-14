@@ -6,6 +6,45 @@ on: [workflow_dispatch]
 #       - "*"
 
 jobs:
+  build_release_arm64:
+    name: Build release ARM64
+    # needs: create_release
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      # - name: install node
+      #   uses: actions/setup-node@master
+      #   with:
+      #     node-version: "current"
+      # - name: install rust
+      #   uses: hecrj/setup-rust-action@v1
+      #   with:
+      #     rust-version: stable
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run commands
+        id: runcmd
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          install: |
+            apt update && apt install sudo
+            sudo apt-get install -y git curl autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev libudev-dev
+            sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
+            sudo apt-get install -y ruby-full
+            sudo apt-get install -y nodejs
+            curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+            source "$HOME/.cargo/env"
+            gem install dotenv
+            gem install json
+            cargo install nj-cli
+            cargo install wasm-pack
+          run: |
+            cd ./application/holder
+            rake release:prod --trace
+      - name: list release files
+        working-directory: ./application/holder/release
+        run: ls
   # create_release:
   #   name: Create release
   #   runs-on: ubuntu-latest
@@ -148,17 +187,12 @@ jobs:
       #     release-tag: ${{ github.ref_name }}
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  build_release_arm64:
-    name: Build release ARM64
-    # needs: create_release
-    runs-on: ubuntu-20.04
+  # build_release_arm64:
+  #   name: Build release ARM64
+  #   # needs: create_release
+  #   runs-on: ubuntu-20.04
   #   steps:
   #     - uses: actions/checkout@v3
-  #     # - name: install ruby
-  #     #   uses: ruby/setup-ruby@v1
-  #     #   with:
-  #     #     ruby-version: "3.0"
-  #     #     bundler-cache: true
   #     # - name: install node
   #     #   uses: actions/setup-node@master
   #     #   with:
@@ -167,31 +201,31 @@ jobs:
   #     #   uses: hecrj/setup-rust-action@v1
   #     #   with:
   #     #     rust-version: stable
-      - uses: uraimo/run-on-arch-action@v2
-        name: Run commands
-        id: runcmd
-        with:
-          arch: aarch64
-          distro: ubuntu20.04
-          githubToken: ${{ github.token }}
-          install: |
-            apt update && apt install sudo
-            sudo apt-get install -y git curl autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev libudev-dev
-            sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
-            sudo apt-get install -y ruby-full
-            sudo apt-get install -y nodejs
-            curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
-            source "$HOME/.cargo/env"
-            gem install dotenv
-            gem install json
-            cargo install nj-cli
-            cargo install wasm-pack
-          run: |
-            cd ./application/holder
-            rake release:prod --trace
-      - name: list release files
-        working-directory: ./application/holder/release
-        run: ls
+  #     - uses: uraimo/run-on-arch-action@v2
+  #       name: Run commands
+  #       id: runcmd
+  #       with:
+  #         arch: aarch64
+  #         distro: ubuntu20.04
+  #         githubToken: ${{ github.token }}
+  #         install: |
+  #           apt update && apt install sudo
+  #           sudo apt-get install -y git curl autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev libudev-dev
+  #           sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
+  #           sudo apt-get install -y ruby-full
+  #           sudo apt-get install -y nodejs
+  #           curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+  #           source "$HOME/.cargo/env"
+  #           gem install dotenv
+  #           gem install json
+  #           cargo install nj-cli
+  #           cargo install wasm-pack
+  #         run: |
+  #           cd ./application/holder
+  #           rake release:prod --trace
+  #     - name: list release files
+  #       working-directory: ./application/holder/release
+  #       run: ls
   build_release_test:
     name: Build release
     # needs: create_release
