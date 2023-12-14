@@ -41,6 +41,7 @@ jobs:
             gem install dotenv
             gem install json
             cargo install nj-cli
+            npm install --global yarn
             yarn global add wasm-pack
           run: |
             cd ./application/holder
