@@ -228,8 +228,9 @@ jobs:
       - name: install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: build release
-        working-directory: ./application/holder
+        # working-directory: ./application/holder
         run: |
+          cd `pwd`/application/holder
           rake release:prod --trace
         env:
           KEYCHAIN_NAME: "build.keychain"
