@@ -229,59 +229,59 @@ jobs:
   #     - name: list release files
   #       working-directory: ./application/holder/release
   #       run: ls
-  build_release_test:
-    name: Build release
-    # needs: create_release
-    runs-on: self-hosted
-    env:
-      PUBLISH_FOR_PULL_REQUEST: 1
-      CSC_FOR_PULL_REQUEST: true
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: libudev-dev
-        run: |
-          sudo yum update -y
-          sudo yum install -y curl gpg gcc gcc-c++ make libyaml-devel openssl-devel readline-devel zlib-devel libudev-devel ruby-devel
-          sudo gpg --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-          pwd
-          sudo yum install -y ruby
-          rake clean
-          rake lint:all
-      - name: install ruby:gem::dotenv
-        run: sudo gem install dotenv
-      - name: install ruby:gem::json
-        run: sudo gem install json
-      - name: install node
-        uses: actions/setup-node@master
-        with:
-          node-version: "current"
-      - name: install rust
-        uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: stable
-      - name: cargo install nj-cli
-        run: cargo install nj-cli
-      - name: install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-      - name: build release
-        # working-directory: ./application/holder
-        run: |
-          cd "$(pwd)/application/holder"
-          rake release:prod --trace
-        env:
-          KEYCHAIN_NAME: "build.keychain"
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          APPLEID: ${{ secrets.APPLEID }}
-          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
-          TEAMID: ${{ secrets.TEAMID }}
-          SIGNING_ID: ${{ secrets.SIGNING_ID }}
-          KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: list release files
-        working-directory: ./application/holder/release
-        run: ls
+  # build_release_test:
+  #   name: Build release
+  #   # needs: create_release
+  #   runs-on: self-hosted
+  #   env:
+  #     PUBLISH_FOR_PULL_REQUEST: 1
+  #     CSC_FOR_PULL_REQUEST: true
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #     - name: libudev-dev
+  #       run: |
+  #         sudo yum update -y
+  #         sudo yum install -y curl gpg gcc gcc-c++ make libyaml-devel openssl-devel readline-devel zlib-devel libudev-devel ruby-devel
+  #         sudo gpg --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+  #         pwd
+  #         sudo yum install -y ruby
+  #         rake clean
+  #         rake lint:all
+  #     - name: install ruby:gem::dotenv
+  #       run: sudo gem install dotenv
+  #     - name: install ruby:gem::json
+  #       run: sudo gem install json
+  #     - name: install node
+  #       uses: actions/setup-node@master
+  #       with:
+  #         node-version: "current"
+  #     - name: install rust
+  #       uses: hecrj/setup-rust-action@v1
+  #       with:
+  #         rust-version: stable
+  #     - name: cargo install nj-cli
+  #       run: cargo install nj-cli
+  #     - name: install wasm-pack
+  #       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+  #     - name: build release
+  #       # working-directory: ./application/holder
+  #       run: |
+  #         cd "$(pwd)/application/holder"
+  #         rake release:prod --trace
+  #       env:
+  #         KEYCHAIN_NAME: "build.keychain"
+  #         CSC_LINK: ${{ secrets.CSC_LINK }}
+  #         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+  #         APPLEID: ${{ secrets.APPLEID }}
+  #         APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+  #         TEAMID: ${{ secrets.TEAMID }}
+  #         SIGNING_ID: ${{ secrets.SIGNING_ID }}
+  #         KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: list release files
+  #       working-directory: ./application/holder/release
+  #       run: ls
       # - name: upload files
       #   if: startsWith(github.ref, 'refs/tags/')
       #   uses: AButler/upload-release-assets@v2.0
