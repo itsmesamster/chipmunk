@@ -41,10 +41,8 @@ jobs:
             gem install dotenv
             gem install json
             cargo install nj-cli
-            cp ./run-on-arch-install.sh /root/run-on-arch-install.sh
-            chmod +x /root/run-on-arch-install.sh && /root/run-on-arch-install.sh
             npm install --global yarn
-            yarn global add wasm-pack
+            npm install -g wasm-pack
           run: |
             cd ./application/holder
             rake release:prod --trace
