@@ -42,7 +42,7 @@ jobs:
             gem install json
             cargo install nj-cli
             npm install --global yarn
-            npm install -g wasm-pack
+            npm install -g wasm-pack@0.11.0
           run: |
             cd ./application/holder
             rake release:prod --trace
