@@ -40,6 +40,7 @@ jobs:
             source "$HOME/.cargo/env"
             rustup -V
             pwd
+            cd ~
             git clone https://github.com/itsmesamster/chipmunk.git
             cd chipmunk
             pwd
@@ -48,7 +49,7 @@ jobs:
             cargo install nj-cli
             npm install --global yarn
           run: |
-            cd ./application/holder
+            cd ~/chipmunk/application/holder
             rake release:prod --trace
       - name: list release files
         working-directory: ./application/holder/release
