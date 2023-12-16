@@ -39,14 +39,14 @@ jobs:
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
             source "$HOME/.cargo/env"
             rustup -V
+            pwd
             gem install dotenv
             gem install json
             cargo install nj-cli
             npm install --global yarn
+          run: |
             cd ./application/holder
             rake release:prod --trace
-          run: |
-            ls
       - name: list release files
         working-directory: ./application/holder/release
         run: ls
