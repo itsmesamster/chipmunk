@@ -40,6 +40,9 @@ jobs:
             source "$HOME/.cargo/env"
             rustup -V
             pwd
+            git clone https://github.com/itsmesamster/chipmunk.git
+            cd chipmunk
+            pwd
             gem install dotenv
             gem install json
             cargo install nj-cli
