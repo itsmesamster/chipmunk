@@ -48,9 +48,10 @@ jobs:
             gem install json
             cargo install nj-cli
             npm install --global yarn
-          run: |
             cd ~/chipmunk/application/holder
             rake release:prod --trace
+          run: |
+            ls
       - name: list release files
         working-directory: ./application/holder/release
         run: ls
