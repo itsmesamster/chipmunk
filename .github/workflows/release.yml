@@ -35,6 +35,7 @@ jobs:
             sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
             sudo apt-get install -y git npm curl autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev libudev-dev
             sudo apt-get install -y ruby-full
+            npm install --global yarn
             yarn install --ignore-engines
             sudo apt-get install -y nodejs
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -48,7 +49,6 @@ jobs:
             gem install dotenv
             gem install json
             cargo install nj-cli
-            npm install --global yarn
             cd ~/chipmunk/application/holder
             rake release:prod --trace
           run: |
