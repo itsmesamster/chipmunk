@@ -9,7 +9,7 @@ jobs:
   build_release_arm64:
     name: Build release ARM64
     # needs: create_release
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
@@ -62,7 +62,6 @@ jobs:
           run: |
             ls
       - name: list release files
-        working-directory: ./application/holder/release
         run: ls
   # create_release:
   #   name: Create release
@@ -271,7 +270,7 @@ jobs:
       - name: install node
         uses: actions/setup-node@master
         with:
-          node-version: "current"
+          node-version: "lts"
       - name: install rust
         uses: hecrj/setup-rust-action@v1
         with:
