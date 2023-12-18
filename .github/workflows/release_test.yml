@@ -1,4 +1,4 @@
-name: BuildAndReleaseMaster
+name: BuildAndReleaseMasterTest
 
 on:
   push:
