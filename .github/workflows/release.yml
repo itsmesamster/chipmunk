@@ -268,7 +268,8 @@ jobs:
       - name: install node
         uses: actions/setup-node@master
         with:
-          node-version: "lts"
+          node-version: "current"
+          architecture: 'arm64'
       - name: install rust
         uses: hecrj/setup-rust-action@v1
         with:
