@@ -6,63 +6,64 @@ on: [workflow_dispatch]
 #       - "*"
 
 jobs:
-  # build_release_arm64:
-  #   name: Build release ARM64
-  #   # needs: create_release
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     packages: write
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: install node
-  #       uses: actions/setup-node@master
-  #       with:
-  #         node-version: "lts"
-  #     - name: install rust
-  #       uses: hecrj/setup-rust-action@v1
-  #       with:
-  #         rust-version: stable
-  #     - uses: uraimo/run-on-arch-action@v2
-  #       name: Run commands
-  #       id: runcmd
-  #       with:
-  #         arch: aarch64
-  #         distro: ubuntu20.04
-  #         githubToken: ${{ github.token }}
-  #         install: |
-  #           apt update && apt install sudo
-  #           sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
-  #           sudo apt-get install -y git npm curl autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev libudev-dev
-  #           sudo apt-get install -y ruby-full
-  #           npm install --global yarn
-  #           yarn install --ignore-engines
-  #           # sudo apt-get update
-  #           # sudo apt-get install -y ca-certificates curl gnupg
-  #           # sudo mkdir -p /etc/apt/keyrings
-  #           # curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-  #           # echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-  #           # sudo apt-get update
-  #           # sudo apt-get install nodejs -y
-  #           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  #           source "$HOME/.cargo/env"
-  #           rustup -V
-  #           pwd
-  #           # cd ~
-  #           # git clone https://github.com/itsmesamster/chipmunk.git
-  #           # cd chipmunk
-  #           # pwd
-  #           # gem install dotenv
-  #           # gem install json
-  #           # cargo install nj-cli
-  #           # npm install npm-update-all -g
+  build_release_arm64:
+    name: Build release ARM64
+    # needs: create_release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: install node
+        uses: actions/setup-node@master
+        with:
+          node-version: '20.x'
+          architecture: 'arm64'
+      - name: install rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: stable
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run commands
+        id: runcmd
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          install: |
+            apt update && apt install sudo
+            sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
+            sudo apt-get install -y git npm curl autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev libudev-dev
+            sudo apt-get install -y ruby-full
+            npm install --global yarn
+            yarn install --ignore-engines
+            # sudo apt-get update
+            # sudo apt-get install -y ca-certificates curl gnupg
+            # sudo mkdir -p /etc/apt/keyrings
+            # curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+            # echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+            # sudo apt-get update
+            # sudo apt-get install nodejs -y
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            source "$HOME/.cargo/env"
+            rustup -V
+            pwd
+            cd ~
+            git clone https://github.com/itsmesamster/chipmunk.git
+            cd chipmunk
+            pwd
+            gem install dotenv
+            gem install json
+            cargo install nj-cli
+            npm install npm-update-all -g
 
-  #           # cd ~/chipmunk/application/holder
-  #           # rake release:prod --trace
-  #         run: |
-  #           ls
-  #     - name: list release files
-  #       run: ls
+            cd ~/chipmunk/application/holder
+            rake release:prod --trace
+          run: |
+            ls
+      - name: list release files
+        run: ls
   # create_release:
   #   name: Create release
   #   runs-on: ubuntu-latest
@@ -244,57 +245,57 @@ jobs:
   #     - name: list release files
   #       working-directory: ./application/holder/release
   #       run: ls
-  build_release_test:
-    name: Build release
-    # needs: create_release
-    runs-on: self-hosted
-    env:
-      PUBLISH_FOR_PULL_REQUEST: 1
-      CSC_FOR_PULL_REQUEST: true
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: libudev-dev
-        run: |
-          sudo yum update -y
-          sudo yum install -y curl gpg gcc gcc-c++ make libyaml-devel openssl-devel readline-devel zlib-devel libudev-devel ruby-devel
-          sudo gpg --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-          pwd
-          sudo yum install -y ruby
-      - name: install ruby:gem::dotenv
-        run: sudo gem install dotenv
-      - name: install ruby:gem::json
-        run: sudo gem install json
-      - name: install node
-        uses: actions/setup-node@master
-        with:
-          node-version: 20.x
-          architecture: 'arm64'
-      - name: install rust
-        uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: stable
-      - name: cargo install nj-cli
-        run: cargo install nj-cli
-      - name: install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-      - name: lint and clean
-        run: |
-          rake clean
-          rake lint:all
-        env:
-          KEYCHAIN_NAME: "build.keychain"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: build release
-        working-directory: ./application/holder
-        run: |
-          rake release:prod --trace
-        env:
-          KEYCHAIN_NAME: "build.keychain"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: list release files
-        working-directory: ./application/holder/release
-        run: ls
+  # build_release_test:
+  #   name: Build release
+  #   # needs: create_release
+  #   runs-on: self-hosted
+  #   env:
+  #     PUBLISH_FOR_PULL_REQUEST: 1
+  #     CSC_FOR_PULL_REQUEST: true
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #     - name: libudev-dev
+  #       run: |
+  #         sudo yum update -y
+  #         sudo yum install -y curl gpg gcc gcc-c++ make libyaml-devel openssl-devel readline-devel zlib-devel libudev-devel ruby-devel
+  #         sudo gpg --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+  #         pwd
+  #         sudo yum install -y ruby
+  #     - name: install ruby:gem::dotenv
+  #       run: sudo gem install dotenv
+  #     - name: install ruby:gem::json
+  #       run: sudo gem install json
+  #     - name: install node
+  #       uses: actions/setup-node@master
+  #       with:
+  #         node-version: 20.x
+  #         architecture: 'arm64'
+  #     - name: install rust
+  #       uses: hecrj/setup-rust-action@v1
+  #       with:
+  #         rust-version: stable
+  #     - name: cargo install nj-cli
+  #       run: cargo install nj-cli
+  #     - name: install wasm-pack
+  #       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+  #     - name: lint and clean
+  #       run: |
+  #         rake clean
+  #         rake lint:all
+  #       env:
+  #         KEYCHAIN_NAME: "build.keychain"
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: build release
+  #       working-directory: ./application/holder
+  #       run: |
+  #         rake release:prod --trace
+  #       env:
+  #         KEYCHAIN_NAME: "build.keychain"
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: list release files
+  #       working-directory: ./application/holder/release
+  #       run: ls
       # - name: upload files
       #   if: startsWith(github.ref, 'refs/tags/')
       #   uses: AButler/upload-release-assets@v2.0
