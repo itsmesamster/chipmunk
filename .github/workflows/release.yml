@@ -268,7 +268,7 @@ jobs:
       - name: install node
         uses: actions/setup-node@master
         with:
-          node-version: "current"
+          node-version: 20.x
           architecture: 'arm64'
       - name: install rust
         uses: hecrj/setup-rust-action@v1
@@ -278,6 +278,13 @@ jobs:
         run: cargo install nj-cli
       - name: install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: lint and clean
+        run: |
+          rake clean
+          rake lint:all
+        env:
+          KEYCHAIN_NAME: "build.keychain"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: build release
         working-directory: ./application/holder
         run: |
