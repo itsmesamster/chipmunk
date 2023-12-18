@@ -32,33 +32,33 @@ jobs:
           githubToken: ${{ github.token }}
           install: |
             apt update && apt install sudo
-            sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
-            sudo apt-get install -y git npm curl autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev libudev-dev
-            sudo apt-get install -y ruby-full
-            npm install --global yarn
-            yarn install --ignore-engines
-            sudo apt-get update
-            sudo apt-get install -y ca-certificates curl gnupg
-            sudo mkdir -p /etc/apt/keyrings
-            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-            sudo apt-get update
-            sudo apt-get install nodejs -y
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-            source "$HOME/.cargo/env"
-            rustup -V
-            pwd
-            cd ~
-            git clone https://github.com/itsmesamster/chipmunk.git
-            cd chipmunk
-            pwd
-            gem install dotenv
-            gem install json
-            cargo install nj-cli
-            npm install npm-update-all -g
+            # sudo apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
+            # sudo apt-get install -y git npm curl autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev libudev-dev
+            # sudo apt-get install -y ruby-full
+            # npm install --global yarn
+            # yarn install --ignore-engines
+            # sudo apt-get update
+            # sudo apt-get install -y ca-certificates curl gnupg
+            # sudo mkdir -p /etc/apt/keyrings
+            # curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+            # echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+            # sudo apt-get update
+            # sudo apt-get install nodejs -y
+            # curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            # source "$HOME/.cargo/env"
+            # rustup -V
+            # pwd
+            # cd ~
+            # git clone https://github.com/itsmesamster/chipmunk.git
+            # cd chipmunk
+            # pwd
+            # gem install dotenv
+            # gem install json
+            # cargo install nj-cli
+            # npm install npm-update-all -g
 
-            cd ~/chipmunk/application/holder
-            rake release:prod --trace
+            # cd ~/chipmunk/application/holder
+            # rake release:prod --trace
           run: |
             ls
       - name: list release files
