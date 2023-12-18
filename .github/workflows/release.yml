@@ -32,7 +32,7 @@ jobs:
         id: runcmd
         with:
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu_latest
           githubToken: ${{ github.token }}
           install: |
             apt update && apt install sudo
@@ -41,13 +41,15 @@ jobs:
             sudo apt-get install -y ruby-full
             npm install --global yarn
             yarn install --ignore-engines
-            # sudo apt-get update
-            # sudo apt-get install -y ca-certificates curl gnupg
-            # sudo mkdir -p /etc/apt/keyrings
-            # curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-            # echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-            # sudo apt-get update
-            # sudo apt-get install nodejs -y
+            sudo apt-get update
+            sudo apt-get install -y ca-certificates curl gnupg
+            sudo mkdir -p /etc/apt/keyrings
+            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+            sudo apt-get update
+            sudo apt-get install nodejs -y
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            source "$HOME/.cargo/env"
             rustup -V
             pwd
             cd ~
@@ -58,10 +60,9 @@ jobs:
             gem install json
             cargo install nj-cli
             npm install npm-update-all -g
-
+          run: |
             cd ~/chipmunk/application/holder
             rake release:prod --trace
-          run: |
             ls
       - name: list release files
         run: ls
