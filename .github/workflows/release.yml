@@ -70,6 +70,8 @@ jobs:
             gem install json
             cargo install nj-cli
             npm install npm-update-all -g
+            rake clean
+            rake lint:all
             cd ~/chipmunk/application/holder
             rake release:prod --trace
           run: |
