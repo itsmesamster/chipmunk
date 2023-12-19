@@ -45,11 +45,19 @@ jobs:
             yarn config set ignore-engines true
             sudo apt-get update
             sudo apt-get install -y -f ca-certificates curl gnupg
-            sudo mkdir -p /etc/apt/keyrings
-            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-            sudo apt-get update
-            sudo apt-get install nodejs -y -f
+            cd /etc/apt/sources.list.d
+            sudo rm nodesource.list
+            sudo apt --fix-broken install
+            sudo apt update
+            sudo apt remove nodejs
+            sudo apt remove nodejs-doc
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            # sudo mkdir -p /etc/apt/keyrings
+            # curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+            # echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+            # sudo apt-get update
+            # sudo apt-get install nodejs -y -f
             curl --proto '=https' --tlsv1.3 -sSf https://sh.rustup.rs | sh -s -- -y
             source "$HOME/.cargo/env"
             rustup -V
