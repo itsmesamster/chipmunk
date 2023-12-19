@@ -71,7 +71,6 @@ jobs:
             cargo install nj-cli
             npm install -y node-gyp-build
             npm install npm-update-all -g
-            yarn upgrade
             rake clean
             rake lint:all
             cd ~/chipmunk/application/holder
