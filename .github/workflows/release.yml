@@ -46,7 +46,7 @@ jobs:
             --volume "${PWD}/artifacts:/artifacts"
           env: |
             artifact_name: git-ubuntu_latest_aarch64
-          shell: /bin/sh
+          shell: /bin/bash
           install: |
             export DOCKER_DEFAULT_PLATFORM=linux/arm64
             apt update && apt install -y sudo
