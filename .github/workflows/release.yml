@@ -92,9 +92,11 @@ jobs:
             npm install npm-update-all -g
             rake clean
             rake lint:all
-          run: |
             cd ~/chipmunk/application/holder
             rake release:prod --trace
+          run: |
+            cd ~/chipmunk/application/holder/release
+            ls
       - name: list release files
         working-directory: ~/chipmunk/application/holder/release
         run: ls
