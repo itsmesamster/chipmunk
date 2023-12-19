@@ -48,8 +48,8 @@ jobs:
             cd /etc/apt/sources.list.d
             sudo apt --fix-broken install
             sudo apt update
-            sudo apt remove nodejs
-            sudo apt remove nodejs-doc
+            sudo apt remove nodejs -y
+            sudo apt remove nodejs-doc -y
             curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
             sudo apt-get install -y nodejs
             # sudo mkdir -p /etc/apt/keyrings
