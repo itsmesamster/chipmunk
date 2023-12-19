@@ -50,6 +50,7 @@ jobs:
             sudo apt update
             sudo apt remove nodejs -y
             sudo apt remove nodejs-doc -y
+            sudo dpkg --remove --force-remove-reinstreq libnode-dev
             curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
             sudo apt-get install -y nodejs
             # sudo mkdir -p /etc/apt/keyrings
