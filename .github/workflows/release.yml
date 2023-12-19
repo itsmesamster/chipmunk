@@ -33,25 +33,13 @@ jobs:
       contents: read
       packages: write
     steps:
-      # - uses: actions/checkout@v3
-      # - name: install node
-      #   uses: actions/setup-node@master
-      #   with:
-      #     node-version: '20.x'
-      #     architecture: 'arm64'
-      # - name: install rust
-      #   uses: hecrj/setup-rust-action@v1
-      #   with:
-      #     rust-version: stable
-      # - uses: jetli/wasm-pack-action@v0.4.0
-      #   with:
-      #     version: 'latest'
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
         with:
-          arch: aarch64
-          distro: ubuntu_latest
+          arch: none
+          distro: none
+          base_image: arm64v8/busybox
           githubToken: ${{ github.token }}
           install: |
             export DOCKER_DEFAULT_PLATFORM=linux/arm64
