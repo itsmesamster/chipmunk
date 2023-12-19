@@ -69,7 +69,7 @@ jobs:
             gem install dotenv
             gem install json
             cargo install nj-cli
-            npm install -y node-gyp-build
+            npm install -y -g node-gyp
             npm install npm-update-all -g
             rake clean
             rake lint:all
