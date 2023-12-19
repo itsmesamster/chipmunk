@@ -37,9 +37,8 @@ jobs:
         name: Run commands
         id: runcmd
         with:
-          arch: none
-          distro: none
-          base_image: arm64v8/busybox
+          arch: aarch64
+          distro: ubuntu_latest
           githubToken: ${{ github.token }}
           install: |
             export DOCKER_DEFAULT_PLATFORM=linux/arm64
