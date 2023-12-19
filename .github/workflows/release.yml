@@ -46,7 +46,6 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y -f ca-certificates curl gnupg
             cd /etc/apt/sources.list.d
-            sudo rm nodesource.list
             sudo apt --fix-broken install
             sudo apt update
             sudo apt remove nodejs
