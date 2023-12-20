@@ -16,14 +16,15 @@ jobs:
       CSC_FOR_PULL_REQUEST: true
     steps:
       - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
         id: create_release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           prerelease: true
-          tag_name: dummy-1.0.0
-          name: dummy-1.0.0
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
   build_release_arm64:
     name: Build release
     needs: create_release
