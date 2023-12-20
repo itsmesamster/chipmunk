@@ -35,6 +35,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - run: export DOCKER_DEFAULT_PLATFORM=linux/arm64
       - uses: addnab/docker-run-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
