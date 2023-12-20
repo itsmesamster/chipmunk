@@ -29,7 +29,11 @@ jobs:
     name: Build release
     needs: create_release
     runs-on: ubuntu-latest
-    container: itsmesamster/test_repo:latest
+    container:
+      image: docker.io/itsmesamster/test_repo:latest
+      credentials:
+         username: ${{ secrets.DOCKER_USERNAME }}
+         password: ${{ secrets.DOCKER_PASSWORD }}
     env:
       PUBLISH_FOR_PULL_REQUEST: 1
       CSC_FOR_PULL_REQUEST: true
