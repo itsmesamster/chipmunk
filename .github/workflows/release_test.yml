@@ -29,6 +29,7 @@ jobs:
     name: Build release
     needs: create_release
     runs-on: ubuntu-latest
+    container: itsmesamster/test_repo:latest
     env:
       PUBLISH_FOR_PULL_REQUEST: 1
       CSC_FOR_PULL_REQUEST: true
@@ -36,17 +37,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: build release
-        uses: addnab/docker-run-action@v3
-        with:
-          image: docker pull itsmesamster/test_repo:latest
-          options: -v ${{ github.workspace }}:/var/www
-          shell: bash
-          run: |
-            rake clean
-            rake lint:all
-            cd ./application/holder
-            rake release:prod --trace
-            ls -la
+        run: |
+          rake clean
+          rake lint:all
+          cd ./application/holder
+          rake release:prod --trace
+          ls -la
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: list release files
