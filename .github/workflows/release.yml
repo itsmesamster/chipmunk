@@ -88,8 +88,8 @@ jobs:
             rake lint:all
             cd ~/chipmunk/application/holder
             rake release:prod --trace
-          run: |
             cp ~/chipmunk/application/holder/release/*.tgz "/artifacts/${artifact_name}"
+          run: |
             echo "Produced artifact at /artifacts/${artifact_name}"
       - name: list release files
         run: ls -la "${PWD}/artifacts"
