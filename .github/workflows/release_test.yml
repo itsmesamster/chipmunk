@@ -41,9 +41,11 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           registry: docker.io
           image: itsmesamster/test_repo:latest
-          options: -v ${{ github.workspace }}:/work -e ABC=123
+          options: -v ${{ github.workspace }}:/var/www
       - name: build release
         run: |
+          pwd
+          ls -la
           rake clean
           rake lint:all
           cd ./application/holder
