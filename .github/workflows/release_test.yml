@@ -40,6 +40,7 @@ jobs:
         with:
           image: docker pull itsmesamster/test_repo:latest
           options: -v ${{ github.workspace }}:/var/www
+          shell: bash
           run: |
             rake clean
             rake lint:all
