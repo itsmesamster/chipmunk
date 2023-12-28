@@ -40,7 +40,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           registry: docker.io
-          image: itsmesamster/test_repo:latest-amd64
+          image: itsmesamster/test_repo:latest
           options: -v ${{ github.workspace }}:/var/www
       - name: build release
         run: |
