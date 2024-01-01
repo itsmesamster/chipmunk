@@ -40,10 +40,17 @@ jobs:
         - 80
       volumes:
         - my_docker_volume:/volume_mount
-    env:
-      PUBLISH_FOR_PULL_REQUEST: 1
-      CSC_FOR_PULL_REQUEST: true
     steps:
+      - uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: '2.14.2' # the full version of `docker-compose` command
+      - name: Running composer install
+        run:  |
+          composer install
+          docker run test_repo
+      - name: Docker run
+        run:  |
+          docker run --rm -v $(pwd):/${{ github.workspace }} -w ${{ github.workspace }} --platform linux/arm64 ubuntu:focal uname -m
       - name: Checkout
         uses: actions/checkout@v3
       # - uses: addnab/docker-run-action@v3
