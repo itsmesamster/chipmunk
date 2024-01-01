@@ -32,8 +32,8 @@ jobs:
     container:
       image: docker.io/itsmesamster/test_repo:latest
       credentials:
-         username: ${{ github.actor }}
-         password: ${{ secrets.github_token }}
+         username: ${{ secrets.DOCKER_USERNAME }}
+         password: ${{ secrets.DOCKER_PASSWORD }}
       env:
         NODE_ENV: development
       ports:
