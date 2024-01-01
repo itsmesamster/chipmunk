@@ -43,7 +43,6 @@ jobs:
     steps:
       - name: Running composer install
         run:  |
-          composer install
           docker run test_repo
       - name: Docker run
         run:  |
