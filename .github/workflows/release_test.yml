@@ -55,8 +55,6 @@ jobs:
             pwd
             ls -la
             export DOCKER_DEFAULT_PLATFORM=linux/arm64
-            rake clean
-            rake lint:all
             cd ./application/holder
             rake release:prod --trace
             ls -la
