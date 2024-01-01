@@ -38,9 +38,10 @@ jobs:
     #     - my_docker_volume:/volume_mount
     #   options: --cpus 1 --platform linux/arm64
     steps:
-      # - name: Docker run
-      #   run:  |
-      #     docker run --rm -v $(pwd):/${{ github.workspace }} -w ${{ github.workspace }} --platform linux/arm64 ubuntu:focal uname -m
+      - name: Docker run
+        run:  |
+          sudo apt-get install -y qemu qemu-user-static
+          # docker run --rm -v $(pwd):/${{ github.workspace }} -w ${{ github.workspace }} --platform linux/arm64 ubuntu:focal uname -m
       - name: Checkout
         uses: actions/checkout@v3
       - uses: addnab/docker-run-action@v3
