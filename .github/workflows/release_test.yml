@@ -41,7 +41,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           registry: docker.io
           image: itsmesamster/test_repo:latest
-          options: -v ${{ github.workspace }}:/var/www
+          options: --platform linux/arm64 -v ${{ github.workspace }}:/var/www
       - name: build release
         run: |
           pwd
