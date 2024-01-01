@@ -44,7 +44,7 @@ jobs:
     steps:
       - name: Docker run
         run:  |
-          docker run --rm -v $(pwd):/${{ github.workspace }} -w ${{ github.workspace }} --platform linux/arm64 ubuntu:focal uname -m
+          uname -m
       - name: Checkout
         uses: actions/checkout@v3
       # - uses: addnab/docker-run-action@v3
