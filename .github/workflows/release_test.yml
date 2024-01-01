@@ -36,7 +36,7 @@ jobs:
          password: ${{ secrets.DOCKER_PASSWORD }}
       volumes:
         - my_docker_volume:/volume_mount
-      options: --cpus 1 --platform linux/arm64
+      options: --cpus 1
     steps:
       # - name: Docker run
       #   run:  |
