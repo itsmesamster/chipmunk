@@ -32,14 +32,17 @@ jobs:
     strategy:
       matrix:
         arch:
+          - docker: amd64  # used by docker create --platform
           - docker: arm64
         distro:
+          - container: "ubuntu:jammy"
           - container: "ubuntu:focal"
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
         with:
           platforms: ${{ matrix.arch }}
+
       - name: Run in Docker
         run: |
           docker run \
@@ -61,9 +64,10 @@ jobs:
     #     - 80
     #   volumes:
     #     - my_docker_volume:/volume_mount
-      # - name: Docker run
-      #   run:  |
-      #     docker run --rm -v $(pwd):/${{ github.workspace }} -w ${{ github.workspace }} --platform linux/arm64 ubuntu:focal uname -m
+    # steps:
+    #   - name: Docker run
+    #     run:  |
+    #       docker run --rm -v $(pwd):/${{ github.workspace }} -w ${{ github.workspace }} --platform linux/arm64 ubuntu:focal uname -m
       - name: Checkout
         uses: actions/checkout@v3
       # - uses: addnab/docker-run-action@v3
