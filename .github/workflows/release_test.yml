@@ -41,9 +41,6 @@ jobs:
       volumes:
         - my_docker_volume:/volume_mount
     steps:
-      - uses: KengoTODA/actions-setup-docker-compose@v1
-        with:
-          version: '2.14.2' # the full version of `docker-compose` command
       - name: Running composer install
         run:  |
           composer install
