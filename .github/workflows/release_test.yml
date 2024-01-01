@@ -41,9 +41,6 @@ jobs:
       volumes:
         - my_docker_volume:/volume_mount
     steps:
-      - name: Running composer install
-        run:  |
-          docker run test_repo
       - name: Docker run
         run:  |
           docker run --rm -v $(pwd):/${{ github.workspace }} -w ${{ github.workspace }} --platform linux/arm64 ubuntu:focal uname -m
