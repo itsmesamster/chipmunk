@@ -59,8 +59,8 @@ jobs:
             cd ./application/holder
             rake release:prod --trace
             ls -la
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: list release files
         working-directory: ./application/holder/release
         run: ls
