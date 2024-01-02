@@ -41,7 +41,6 @@ jobs:
       - name: Docker run
         run:  |
           sudo apt-get install -y qemu qemu-user-static
-          # docker run --rm -v $(pwd):/${{ github.workspace }} -w ${{ github.workspace }} --platform linux/arm64 ubuntu:focal uname -m
       - name: Checkout
         uses: actions/checkout@v3
       - name: list release files
@@ -64,13 +63,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: list release files
-        working-directory: /application/holder/release
+        working-directory: ${{ github.workspace }}/application/holder/release
         run: ls
       - name: upload files
         if: startsWith(github.ref, 'refs/tags/')
         uses: AButler/upload-release-assets@v2.0
         with:
-          files: "/application/holder/release/*.tgz;/application/holder/release/*.zip"
+          files: "${{ github.workspace }}/application/holder/release/*.tgz;${{ github.workspace }}/application/holder/release/*.zip"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           release-tag: ${{ github.ref_name }}
         env:
