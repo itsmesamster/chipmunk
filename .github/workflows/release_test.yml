@@ -44,6 +44,9 @@ jobs:
           # docker run --rm -v $(pwd):/${{ github.workspace }} -w ${{ github.workspace }} --platform linux/arm64 ubuntu:focal uname -m
       - name: Checkout
         uses: actions/checkout@v3
+      - name: list release files
+        working-directory: /application/holder
+        run: ls
       - uses: addnab/docker-run-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -61,13 +64,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: list release files
-        working-directory: application/holder/release
+        working-directory: /application/holder/release
         run: ls
       - name: upload files
         if: startsWith(github.ref, 'refs/tags/')
         uses: AButler/upload-release-assets@v2.0
         with:
-          files: "./application/holder/release/*.tgz;./application/holder/release/*.zip"
+          files: "/application/holder/release/*.tgz;/application/holder/release/*.zip"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           release-tag: ${{ github.ref_name }}
         env:
