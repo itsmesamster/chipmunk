@@ -29,43 +29,50 @@ jobs:
     name: Build release
     needs: create_release
     runs-on: ubuntu-latest
-    # container:
-    #   image: docker.io/itsmesamster/test_repo:latest-multi
-    #   credentials:
-    #      username: ${{ secrets.DOCKER_USERNAME }}
-    #      password: ${{ secrets.DOCKER_PASSWORD }}
-    #   volumes:
-    #     - my_docker_volume:/volume_mount
-    #   options: --cpus 1 --platform linux/arm64
+    container:
+      image: docker.io/itsmesamster/test_repo:latest-multi
+      credentials:
+         username: ${{ secrets.DOCKER_USERNAME }}
+         password: ${{ secrets.DOCKER_PASSWORD }}
+      volumes:
+        - my_docker_volume:/volume_mount
+      options: --cpus 1 --platform linux/arm64
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
-      # - name: Docker run
-      #   run:  |
-      #     sudo apt-get install -y qemu qemu-user-static
       - name: Checkout
         uses: actions/checkout@v3
       - name: list release files
         working-directory: ${{ github.workspace }}/application/holder
         run: ls
-      - uses: addnab/docker-run-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          registry: docker.io
-          image: itsmesamster/test_repo:latest
-          options: --platform linux/arm64 -v ${{ github.workspace }}:/var/www
-          run:  |
-            pwd
-            ls -la
-            export DOCKER_DEFAULT_PLATFORM=linux/arm64
-            cd ./application/holder
-            rake release:prod --trace
-            ls -la
+      - name: Run commands
+        run:  |
+          pwd
+          ls -la
+          export DOCKER_DEFAULT_PLATFORM=linux/arm64
+          cd ./application/holder
+          rake release:prod --trace
+          ls -la
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - uses: addnab/docker-run-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+      #     registry: docker.io
+      #     image: itsmesamster/test_repo:latest
+      #     options: --platform linux/arm64 -v ${{ github.workspace }}:/var/www
+      #     run:  |
+      #       pwd
+      #       ls -la
+      #       export DOCKER_DEFAULT_PLATFORM=linux/arm64
+      #       cd ./application/holder
+      #       rake release:prod --trace
+      #       ls -la
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: list release files
         working-directory: ${{ github.workspace }}/application/holder/release
         run: ls
