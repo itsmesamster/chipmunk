@@ -45,7 +45,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: list release files
-        working-directory: /application/holder
+        working-directory: ${{ github.workspace }}/application/holder
         run: ls
       - uses: addnab/docker-run-action@v3
         with:
