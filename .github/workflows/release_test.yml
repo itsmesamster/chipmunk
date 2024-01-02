@@ -41,8 +41,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          image: docker.io/itsmesamster/test_repo:latest
-          platforms: arm64
+          platforms: arm64, amd64
       # - name: Docker run
       #   run:  |
       #     sudo apt-get install -y qemu qemu-user-static
