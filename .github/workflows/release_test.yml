@@ -36,6 +36,8 @@ jobs:
       credentials:
          username: ${{ secrets.DOCKER_USERNAME }}
          password: ${{ secrets.DOCKER_PASSWORD }}
+      ports:
+        - 5000
       volumes:
         - my_docker_volume:/volume_mount
       options: --cpus 1 --platform linux/arm64
