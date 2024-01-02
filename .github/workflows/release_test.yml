@@ -38,11 +38,11 @@ jobs:
     #     - my_docker_volume:/volume_mount
     #   options: --cpus 1 --platform linux/arm64
     steps:
-        - name: Set up QEMU
-          uses: docker/setup-qemu-action@v3
-          with:
-            image: docker.io/itsmesamster/test_repo:latest
-            platforms: arm64
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          image: docker.io/itsmesamster/test_repo:latest
+          platforms: arm64
       # - name: Docker run
       #   run:  |
       #     sudo apt-get install -y qemu qemu-user-static
