@@ -1,11 +1,15 @@
 pub mod buffer;
 use crate::buffer::{CancallableMinBuffered, REDUX_MIN_BUFFER_SPACE, REDUX_READER_CAPACITY};
 use buf_redux::BufReader;
-use grep_regex::RegexMatcherBuilder;
+use grep_regex::{RegexMatcher, RegexMatcherBuilder};
 use grep_searcher::{sinks::UTF8, Searcher};
-use std::collections::HashMap;
-use std::fs::File;
-use std::path::{Path, PathBuf};
+use regex::Regex;
+use std::{
+    collections::HashMap,
+    fs::File,
+    io,
+    path::{Path, PathBuf},
+};
 use thiserror::Error;
 use tokio_util::sync::CancellationToken;
 
@@ -19,6 +23,30 @@ pub enum GrepError {
     FileProcessingError(String),
     #[error("Operation cancelled")]
     OperationCancelled,
+    #[error("Error building regex: {0}")]
+    BuilingRegExError(grep_regex::Error),
+    #[error("Error building regex: {0}")]
+    RegExError(regex::Error),
+    #[error("IO error: {0}")]
+    IOError(String),
+}
+
+impl From<grep_regex::Error> for GrepError {
+    fn from(e: grep_regex::Error) -> Self {
+        Self::BuilingRegExError(e)
+    }
+}
+
+impl From<regex::Error> for GrepError {
+    fn from(e: regex::Error) -> Self {
+        Self::RegExError(e)
+    }
+}
+
+impl From<io::Error> for GrepError {
+    fn from(e: io::Error) -> Self {
+        Self::IOError(e.to_string())
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -28,137 +56,83 @@ pub struct SearchResult {
     pub error_message: Option<String>,
 }
 
-pub struct TextGrep;
-
-impl Default for TextGrep {
-    fn default() -> Self {
-        TextGrep::new()
-    }
+fn get_matcher(patterns: &[&str]) -> Result<RegexMatcher, GrepError> {
+    Ok(RegexMatcherBuilder::new().build(
+        &patterns
+            .iter()
+            .map(|pattern| regex::escape(pattern))
+            .collect::<Vec<String>>()
+            .join("|"),
+    )?)
 }
 
-impl TextGrep {
-    pub fn new() -> Self {
-        TextGrep
+fn get_patterns_as_regs(patterns: &[&str], _case_sensitive: bool) -> Result<Vec<Regex>, GrepError> {
+    // TODO: consider "case_sensitive" flag
+    let mut regs: Vec<Regex> = Vec::new();
+    for pattern in patterns.iter() {
+        regs.push(Regex::new(&regex::escape(pattern))?);
     }
-
-    pub async fn count_occurrences(
-        &self,
-        patterns: Vec<&str>,
-        file_paths: Vec<&str>,
-        case_sensitive: bool,
-        cancel_token: CancellationToken,
-    ) -> Result<Vec<Result<SearchResult, GrepError>>, GrepError> {
-        let mut results = Vec::new();
-
-        for file_path in file_paths {
-            if cancel_token.is_cancelled() {
-                return Err(GrepError::OperationCancelled); // Return early if cancellation requested
-            }
-            match process_file(file_path, &patterns, case_sensitive, &cancel_token) {
-                Ok(result) => results.push(Ok(result)),
-                Err(err) => results.push(Err(err)),
-            }
-        }
-
-        Ok(results)
-    }
+    Ok(regs)
 }
 
 fn process_file(
-    file_path: &str,
-    patterns: &[&str],
-    case_sensitive: bool,
+    file_path: &PathBuf,
+    matcher: &RegexMatcher,
+    patterns: &[Regex],
     cancel_token: &CancellationToken,
 ) -> Result<SearchResult, GrepError> {
-    let file_path = PathBuf::from(&file_path);
-
-    if !is_text_file(&file_path) {
-        let error_msg = format!("File '{}' is not a text file", file_path.display());
+    if !is_text_file(file_path) {
         return Ok(SearchResult {
             file_path: file_path.to_string_lossy().into_owned(),
             pattern_counts: HashMap::new(),
-            error_message: Some(error_msg),
+            error_message: Some(format!("File '{}' is not a text file", file_path.display())),
         });
     }
-
-    let start_time = std::time::Instant::now();
-
-    let combined_regex_pattern = patterns.join("|");
-    let combined_regex = match RegexMatcherBuilder::new().build(&combined_regex_pattern) {
-        Ok(regex) => regex,
-        Err(e) => {
-            return Err(GrepError::FileProcessingError(format!(
-                "Error building regex: {}",
-                e
-            )));
-        }
-    };
-
-    let mut local_pattern_counts = HashMap::new();
-
-    match File::open(&file_path) {
-        Ok(file) => {
-            let reader = BufReader::with_capacity(REDUX_READER_CAPACITY, file).set_policy(
-                CancallableMinBuffered((REDUX_MIN_BUFFER_SPACE, cancel_token.clone())),
-            );
-
-            let mut searcher = Searcher::new();
-            if let Err(e) = searcher.search_reader(
-                &combined_regex,
-                reader,
-                UTF8(|_, line| {
-                    let line_to_match = if case_sensitive {
-                        line.to_string()
-                    } else {
-                        line.to_lowercase()
-                    };
-
-                    for pattern in patterns {
-                        if cancel_token.is_cancelled() {
-                            return Ok(false);
-                        }
-
-                        let pattern_to_match = if case_sensitive {
-                            pattern.to_string()
-                        } else {
-                            pattern.to_lowercase()
-                        };
-
-                        let mut total_count = 0;
-                        total_count += line_to_match.matches(&pattern_to_match).count();
-
-                        let count_entry = local_pattern_counts
-                            .entry((*pattern).to_string())
-                            .or_insert(0);
-                        *count_entry += total_count;
-                    }
-                    Ok(true)
-                }),
-            ) {
-                return Err(GrepError::FileProcessingError(format!(
-                    "Error processing file: {}",
-                    e
-                )));
-            }
-        }
-        Err(e) => {
-            return Err(GrepError::FileReadError(format!(
-                "Error reading file: {}",
-                e
-            )));
-        }
-    }
-
-    let end_time = start_time.elapsed();
-    eprintln!("Time taken {:?}", end_time);
+    let mut pattern_counts = HashMap::new();
+    let file = File::open(file_path)?;
+    let reader = BufReader::with_capacity(REDUX_READER_CAPACITY, file).set_policy(
+        CancallableMinBuffered((REDUX_MIN_BUFFER_SPACE, cancel_token.clone())),
+    );
+    let mut searcher = Searcher::new();
+    searcher
+        .search_reader(
+            matcher,
+            reader,
+            UTF8(|_, line| {
+                for pattern in patterns {
+                    let count_entry = pattern_counts.entry((*pattern).to_string()).or_insert(0);
+                    *count_entry += pattern.captures_iter(line).count();
+                }
+                Ok(true)
+            }),
+        )
+        .map_err(|e| GrepError::FileProcessingError(format!("Error processing file: {}", e)))?;
 
     Ok(SearchResult {
         file_path: file_path.to_string_lossy().into_owned(),
-        pattern_counts: local_pattern_counts,
+        pattern_counts,
         error_message: None,
     })
 }
 
 fn is_text_file(_file_path: &Path) -> bool {
     true
+}
+
+pub async fn count_occurrences(
+    patterns: &[&str],
+    file_paths: &[&PathBuf],
+    case_sensitive: bool,
+    cancel_token: CancellationToken,
+) -> Result<Vec<Result<SearchResult, GrepError>>, GrepError> {
+    let mut results = Vec::new();
+    let matcher = get_matcher(patterns)?;
+    let regs = get_patterns_as_regs(patterns, case_sensitive)?;
+    for file_path in file_paths {
+        if cancel_token.is_cancelled() {
+            return Err(GrepError::OperationCancelled); // Return early if cancellation requested
+        }
+        results.push(process_file(file_path, &matcher, &regs, &cancel_token));
+    }
+    Ok(results)
 }
