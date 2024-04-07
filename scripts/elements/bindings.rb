@@ -60,6 +60,7 @@ namespace :bindings do
       errors
       stream
       promises
+      benchmark
     ]
     test_specs.each do |spec|
       desc "run jasmine #{spec}-spec"

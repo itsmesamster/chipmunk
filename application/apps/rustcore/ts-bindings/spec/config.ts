@@ -46,6 +46,10 @@ export interface IConfiguration {
         };
         indexes: {
             regular: IRegularTests;
+            performance: {
+                run: boolean;
+                tests: { [key: string]: IPerformanceTest };
+            };
         };
         jobs: {
             regular: IRegularTests;
@@ -55,6 +59,10 @@ export interface IConfiguration {
         };
         search: {
             regular: IRegularTests;
+            performance: {
+                run: boolean;
+                tests: { [key: string]: IPerformanceTest };
+            };
         };
         values: {
             regular: IRegularTests;
@@ -100,6 +108,7 @@ export function readConfigurationFile(): Config {
             return undefined;
         })();
         let filename = (process.env as any)['JASMIN_TEST_CONFIGURATION'];
+        console.warn(`Samster ${filename}`);
         if ((typeof filename !== 'string' || filename.trim() === '') && defaults === undefined) {
             return new Error(
                 `To run test you should define a path to configuration file with JASMIN_TEST_CONFIGURATION=path_to_config_json_file`,

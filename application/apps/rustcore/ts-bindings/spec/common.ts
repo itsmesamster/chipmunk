@@ -12,6 +12,8 @@ import { IRegularTests } from './config';
 
 import * as tmp from 'tmp';
 import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 const NS_PER_SEC = 1e9;
 const NS_PER_MS = 1000000;
@@ -208,6 +210,27 @@ export function performanceReport(
         ),
     );
     output(`└${'─'.repeat(LEN)}┘`);
+
+    const result = {
+        name,
+        actual,
+        expectation,
+        passed: actual <= expectation,
+    };
+
+    let performance_results = (process.env as any)['PERFORMANCE_RESULTS'];
+    let results_folder = (process.env as any)['SH_HOME_DIR'];
+    if (typeof performance_results === 'string') {
+        const filePath = path.join(results_folder, performance_results);
+        // Ensure filePath is a real path
+        if (!fs.existsSync(results_folder)) {
+            // Create directory if it doesn't exist
+            fs.mkdirSync(results_folder, { recursive: true });
+        }
+        const data = JSON.stringify(result, null, 2) + ',\n'; // JSON format with indentation and comma
+        fs.appendFileSync(filePath, data);
+    }
+
     return actual <= expectation;
 }
 
@@ -230,4 +253,8 @@ export function setMeasurement(): () => ITimeMeasurement {
             sec_str: (ms / MS_PER_SEC).toFixed(2),
         };
     };
+}
+
+export function helloWorld() {
+  return 'Hello, World!';
 }

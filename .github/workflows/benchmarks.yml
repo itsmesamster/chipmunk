@@ -1,0 +1,125 @@
+name: Benchmarks
+
+on: [workflow_dispatch]
+
+jobs:
+  # invoke_jasmine_tests:
+  #     name: Invoke Jasmine performance tests
+  #     runs-on: sh-linux-x86-chipmunk  # Specify that it runs on a self-hosted runner
+  #     steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #     - name: libudev-dev and install Ruby
+  #       run: |
+  #         whoami
+  #         sudo yum install -y libudev-devel ruby-devel cargo npm
+  #         sudo yum install rbenv
+  #         rbenv install 3.1.2 -s
+  #         rbenv global 3.1.2
+  #         sudo chown -R $(whoami) /usr/local
+  #     - name: install ruby:gem::dotenv
+  #       run: sudo gem install dotenv
+  #     - name: install ruby:gem::json
+  #       run: sudo gem install json
+  #     - name: install node
+  #       uses: actions/setup-node@master
+  #       with:
+  #         node-version: "current"
+  #     - name: install rust
+  #       uses: hecrj/setup-rust-action@v1
+  #       with:
+  #         rust-version: stable
+  #     - name: cargo install wasm-pack
+  #       run: |
+  #         pwd
+  #         whoami
+  #         cargo install wasm-pack --locked
+  #         npm install -y yarn rustup
+  #         export PATH="$HOME/.cargo/bin:$PATH"
+  #         export PATH="$HOME/.cargo/env:$PATH"
+  #         . "$HOME/.cargo/env"
+  #     - name: Run Jasmine performance tests
+  #       run: |
+  #         source ./application/apps/rustcore/ts-bindings/spec/setup_config.sh sample_tag
+  #         pwd
+  #         cargo install nj-cli --locked
+  #         source ~/.bashrc
+  #         rustup -V
+  #         whoami
+  #         nj-cli --version
+  #         printenv
+  #         rake bindings:clean
+  #         rake bindings:test:indexes
+  #         rake bindings:test:search
+  #         rake bindings:test:observe
+  invoke_jasmine_tests:
+    name: Invoke Jasmine performance tests
+    runs-on: X64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: libudev-dev
+        run: |
+          mkdir -p /home/ubuntu/chipmunk_performance_results
+          ls -la /home/ubuntu/chipmunk_performance_results
+          sudo apt-get update && sudo apt-get install -y gconf-service libgbm-dev libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libnss3 lsb-release xdg-utils wget ca-certificates
+          sudo apt-get install -y libudev-dev cargo npm
+      - name: Install Ruby and required gems
+        run: |
+          curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+          echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+          sudo apt-get update
+          sudo apt-get install -y yarn
+          yarn --version
+          sudo apt update
+          sudo apt install -y ruby-full
+          sudo apt-get install -y software-properties-common
+          sudo apt-add-repository -y ppa:rael-gc/rvm
+          sudo apt-get update
+          sudo apt-get install -y rvm
+          sudo usermod -a -G rvm $USER
+          echo 'source "/etc/profile.d/rvm.sh"' >> ~/.bashrc
+          source /etc/profile.d/rvm.sh
+          rvm install 3.1.2
+          echo "source $HOME/.rvm/scripts/rvm" >> ~/.bashrc
+          ruby --version
+          sudo chown -R $(whoami) /usr/local
+          rvm use 3.1.2 --default
+          rvm --version
+          rvm info
+          which rvm
+          ruby --version
+          source ~/.bashrc
+          gem install dotenv
+          gem install json
+          npm install -y rustup
+          export PATH="$HOME/.cargo/bin:$PATH"
+          export PATH="$HOME/.cargo/env:$PATH"
+          . "$HOME/.cargo/env"
+      - name: install node
+        uses: actions/setup-node@master
+        with:
+          node-version: "current"
+      - name: cargo install nj-cli
+        run: |
+          cargo install nj-cli --locked
+          cargo install wasm-pack --locked
+      - name: Run Jasmine performance tests
+        run: |
+          source ./application/apps/rustcore/ts-bindings/spec/setup_config.sh sample_tag
+          export PATH="/usr/share/rvm:$PATH"
+          source ~/.bashrc
+          which ruby
+          ruby --version
+          pwd
+          source $HOME/.cargo/env
+          rustup -V
+          whoami
+          nj-cli --version
+          sudo chown -R $(whoami) /home/ubuntu/
+          printenv
+          rustup default stable
+          rake bindings:clean
+          rake bindings:test:indexes
+          rake bindings:test:search
+          rake bindings:test:observe
