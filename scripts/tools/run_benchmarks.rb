@@ -62,6 +62,7 @@ releases.take(NUMBER_OF_RELEASES).each_with_index do |release, index|
         system(command)
       end
     end
+    system("cat #{ENV_VARS['SH_HOME_DIR']}/#{ENV_VARS['PERFORMANCE_RESULTS_FOLDER']}/Benchmark_#{release.tag_name}.json")
   end
 
   puts "Completed processing release #{index + 1}: #{release.name}"
