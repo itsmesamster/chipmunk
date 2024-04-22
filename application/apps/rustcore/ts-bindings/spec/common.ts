@@ -218,14 +218,16 @@ export function performanceReport(
         passed: actual <= expectation,
     };
 
+    let performance_results_folder = (process.env as any)['PERFORMANCE_RESULTS_FOLDER'];
     let performance_results = (process.env as any)['PERFORMANCE_RESULTS'];
-    let results_folder = (process.env as any)['SH_HOME_DIR'];
+    let home_dir = (process.env as any)['SH_HOME_DIR'];
     if (typeof performance_results === 'string') {
-        const filePath = path.join(results_folder, performance_results);
+        const folderPath = path.join(home_dir, performance_results_folder);
+        const filePath = path.join(folderPath, performance_results);
         // Ensure filePath is a real path
-        if (!fs.existsSync(results_folder)) {
+        if (!fs.existsSync(folderPath)) {
             // Create directory if it doesn't exist
-            fs.mkdirSync(results_folder, { recursive: true });
+            fs.mkdirSync(folderPath, { recursive: true });
         }
         const data = JSON.stringify(result, null, 2) + ',\n'; // JSON format with indentation and comma
         fs.appendFileSync(filePath, data);

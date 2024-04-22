@@ -31,8 +31,10 @@ releases.take(NUMBER_OF_RELEASES).each_with_index do |release, index|
   puts "Processing release #{index + 1}: #{release.name}"
 
   ENV_VARS = {
-    'JASMIN_TEST_CONFIGURATION' => 'benchmarks.json',
-    'PERFORMANCE_RESULTS' => "chipmunk_performance_results/Benchmark_#{release.tag_name}.json",
+    'JASMIN_TEST_CONFIGURATION' => './spec/benchmarks.json',
+    'PERFORMANCE_RESULTS_FOLDER' => 'chipmunk_performance_results',
+    'PERFORMANCE_RESULTS' => "Benchmark_#{release.tag_name}.json",
+    'SH_HOME_DIR' => "/home/ubuntu"
   }
   # Create a temporary directory for this release
   Dir.mktmpdir do |temp_dir|
@@ -41,22 +43,16 @@ releases.take(NUMBER_OF_RELEASES).each_with_index do |release, index|
 
     FileUtils.cp_r("#{SHELL_SCRIPT_PATH}/.", "#{temp_dir}/#{SHELL_SCRIPT_PATH}/.", verbose: true)
 
-    # system("cp -r #{SHELL_SCRIPT_PATH} #{temp_dir}/#{SHELL_SCRIPT_PATH}")
-    # system("source #{SHELL_SCRIPT_PATH}/#{SHELL_SCRIPT_NAME} #{release.tag_name}")
-    # `export JASMIN_TEST_CONFIGURATION='./spec/benchmarks.json'`
-    # system("export PERFORMANCE_RESULTS='chipmunk_performance_results/Benchmark_#{release.tag_name}.json")
-    # `source ~/.bashrc`
-    # system("printenv")
     # Change directory to the temporary directory
     Dir.chdir(temp_dir) do
       # Execute the shell script
       ENV_VARS.each do |key, value|
-        ENV[key] = "./spec/#{value}"
+        ENV[key] = "#{value}"
       end
 
       system("printenv")
 
-      if File.exist?("#{SHELL_SCRIPT_PATH}/#{ENV_VARS['JASMIN_TEST_CONFIGURATION']}")
+      if File.exist?("#{SHELL_SCRIPT_PATH}/#{ENV_VARS['JASMIN_TEST_CONFIGURATION'].gsub('./spec/', '')}")
         puts "File exists."
       else
         break
