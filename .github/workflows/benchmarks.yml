@@ -90,6 +90,7 @@ jobs:
           source ~/.bashrc
           gem install dotenv
           gem install json
+          gem install octokit tmpdir fileutils
           npm install -y rustup
           export PATH="$HOME/.cargo/bin:$PATH"
           export PATH="$HOME/.cargo/env:$PATH"
