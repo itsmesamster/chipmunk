@@ -95,6 +95,7 @@ jobs:
           export PATH="$HOME/.cargo/bin:$PATH"
           export PATH="$HOME/.cargo/env:$PATH"
           . "$HOME/.cargo/env"
+          ruby scripts/tools/run_benchmarks.rb 4
       - name: install node
         uses: actions/setup-node@master
         with:
@@ -122,6 +123,5 @@ jobs:
           rake bindings:test:indexes
           rake bindings:test:search
           rake bindings:test:observe
-          ruby scripts/tools/run_benchmarks.rb 4
           ls -la /home/ubuntu/chipmunk_performance_results
           cat /home/ubuntu/chipmunk_performance_results/Benchmark_sample_tag.json
