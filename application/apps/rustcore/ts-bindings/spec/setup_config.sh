@@ -1,5 +1,5 @@
 export JASMIN_TEST_CONFIGURATION="./spec/benchmarks.json"
-export SH_HOME_DIR="/home/ubuntu"
+export SH_HOME_DIR="/Users/sameer.g.srivastava"
 if [ "$#" -gt 0 ]; then
     export PERFORMANCE_RESULTS_FOLDER="chipmunk_performance_results"
     export PERFORMANCE_RESULTS="Benchmark_$1.json"

@@ -800,7 +800,7 @@ describe('Observe', function () {
         Object.keys(config.regular.execute_only).length > 0 &&
         Object.keys(config.performance.tests).forEach((alias: string, index: number) => {
             const test = (config.performance.tests as any)[alias];
-            const testName = `Performance test #${index + 1} (${test.alias}) - (${test.open_as} file)`;
+            const testName = `Performance test #${index + 1} - ${test.alias}`;
             if (test.ignore) {
                 console.log(`Test "${testName}" has been ignored`);
                 return;
@@ -877,6 +877,45 @@ describe('Observe', function () {
                                             )
                                             .catch(finish.bind(null, session, done));
                                         break;
+                                    case 'startup_measurement':
+                                        const tmpobj = createSampleFile(
+                                            5000,
+                                            logger,
+                                            (i: number) => `some line data: ${i}\n`,
+                                        );
+                                        stream
+                                            .observe(
+                                                new Factory.Stream()
+                                                    .asText()
+                                                    .process({
+                                                        command: `less ${tmpobj.name}`,
+                                                        cwd: process.cwd(),
+                                                        envs: process.env as { [key: string]: string },
+                                                    })
+                                                    .get()
+                                                    .sterilized(),
+                                            )
+                                            .catch(finish.bind(null, session, done));
+                                        events.StreamUpdated.subscribe((rows: number) => {
+                                            try {
+                                                if (rows < 5000) {
+                                                    return;
+                                                }
+                                                await stream.grab(500, 7);
+                                                finish(session, done);
+                                            } catch (err) {
+                                                finish(
+                                                    undefined,
+                                                    done,
+                                                    new Error(
+                                                        `Fail to finish test due error: ${
+                                                            err instanceof Error ? err.message : err
+                                                        }`,
+                                                    ),
+                                                );
+                                            }
+                                        });
+                                        break;
                                     default:
                                         finish(
                                             undefined,
@@ -916,4 +955,5 @@ describe('Observe', function () {
                 );
             });
         });
+
 });
