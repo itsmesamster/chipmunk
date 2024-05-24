@@ -95,7 +95,6 @@ namespace :electron do
 
   desc 'build dev version of electron'
   task build_dev: [
-    'electron:copy_tsbindings_and_platform',
     'electron:install',
     'electron:copy_client_debug',
     'environment:check',
@@ -106,7 +105,6 @@ namespace :electron do
 
   desc 'build production version of electron'
   task build_prod: [
-    'electron:copy_tsbindings_and_platform',
     'electron:install',
     'electron:copy_client_prod',
     'environment:check',
@@ -124,7 +122,7 @@ namespace :electron do
   end
 
   desc 'tsc comile check electron'
-  task check: ['electron:install', 'wasm:build', 'electron:copy_tsbindings_and_platform'] do
+  task check: ['electron:install', 'wasm:build'] do
     Shell.chdir(Paths::ELECTRON) do
       duration = Shell.timed_sh 'yarn run check', 'tsc check electron'
       Reporter.done('electron', 'check', '', duration)

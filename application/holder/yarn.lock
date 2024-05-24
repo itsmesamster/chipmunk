@@ -3595,9 +3595,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"platform@file:../../../platform::locator=rustcore%40file%3A..%2Fapps%2Frustcore%2Fts-bindings%23..%2Fapps%2Frustcore%2Fts-bindings%3A%3Ahash%3D54f28d%26locator%3Dchipmunk%2540workspace%253A.":
+"platform@file:../../../platform::locator=rustcore%40file%3A..%2Fapps%2Frustcore%2Fts-bindings%23..%2Fapps%2Frustcore%2Fts-bindings%3A%3Ahash%3De5f533%26locator%3Dchipmunk%2540workspace%253A.":
   version: 3.9.0
-  resolution: "platform@file:../../../platform#../../../platform::hash=d0a054&locator=rustcore%40file%3A..%2Fapps%2Frustcore%2Fts-bindings%23..%2Fapps%2Frustcore%2Fts-bindings%3A%3Ahash%3D54f28d%26locator%3Dchipmunk%2540workspace%253A."
+  resolution: "platform@file:../../../platform#../../../platform::hash=d0a054&locator=rustcore%40file%3A..%2Fapps%2Frustcore%2Fts-bindings%23..%2Fapps%2Frustcore%2Fts-bindings%3A%3Ahash%3De5f533%26locator%3Dchipmunk%2540workspace%253A."
   checksum: 10c0/e7db0bcc97dd18832527ac2b7678796427f0445e5b2516aac1f24e50e513c15136c9a9e231c5d7cdf1a47f1ff365921b50a4d6cbecbbfb11f46eb18bc1d5cadf
   languageName: node
   linkType: hard
@@ -3844,12 +3844,12 @@ __metadata:
 
 "rustcore@file:../apps/rustcore/ts-bindings::locator=chipmunk%40workspace%3A.":
   version: 3.9.0
-  resolution: "rustcore@file:../apps/rustcore/ts-bindings#../apps/rustcore/ts-bindings::hash=54f28d&locator=chipmunk%40workspace%3A."
+  resolution: "rustcore@file:../apps/rustcore/ts-bindings#../apps/rustcore/ts-bindings::hash=e5f533&locator=chipmunk%40workspace%3A."
   dependencies:
     platform: "file:../../../platform"
     tslib: "npm:^2.6.2"
     uuid: "npm:^9.0.1"
-  checksum: 10c0/b9f78536cfd3d03ad69e978515559530fd0c5f427d3e34843cd2d5e4ec1527cc9664b2ec3c268c67f4fefcc7aed6f4f22658bb75284432330744e8dce3cd3a57
+  checksum: 10c0/df8f1fd9c48dc48d2678bae3198372d631a7037f9be85b3a267b741f671e284e64c60ed83742494ec96363038542c3fb6ba9f31e425fa26f3a02bfe6875bc0ef
   languageName: node
   linkType: hard
 
