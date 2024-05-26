@@ -50,7 +50,11 @@ namespace :electron do
     Reporter.done('client', "copy client to #{short_dest}", '', duration)
   end
 
-  task copy_tsbindings_and_platform: ['bindings:build', 'platform:build'] do
+
+# platform first
+# rustcore 2nd
+# holder last
+  task copy_tsbindings_and_platform: ['platform:build', 'bindings:build'] do
     rustcore_dest = "#{Paths::ELECTRON}/node_modules/rustcore"
     Shell.rm_rf(rustcore_dest)
     FileUtils.mkdir_p rustcore_dest
@@ -95,6 +99,7 @@ namespace :electron do
 
   desc 'build dev version of electron'
   task build_dev: [
+    'electron:copy_tsbindings_and_platform',
     'electron:install',
     'electron:copy_client_debug',
     'environment:check',
@@ -105,6 +110,7 @@ namespace :electron do
 
   desc 'build production version of electron'
   task build_prod: [
+    'electron:copy_tsbindings_and_platform',
     'electron:install',
     'electron:copy_client_prod',
     'environment:check',
@@ -122,7 +128,7 @@ namespace :electron do
   end
 
   desc 'tsc comile check electron'
-  task check: ['electron:install', 'wasm:build'] do
+  task check: ['electron:install', 'wasm:build', 'electron:copy_tsbindings_and_platform'] do
     Shell.chdir(Paths::ELECTRON) do
       duration = Shell.timed_sh 'yarn run check', 'tsc check electron'
       Reporter.done('electron', 'check', '', duration)
