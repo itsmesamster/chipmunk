@@ -7,7 +7,7 @@ import { initLogger } from './logger';
 initLogger();
 import { Session, Factory } from '../src/api/session';
 import { IGrabbedElement } from 'platform/types/content';
-import { createSampleFile, finish, runner } from './common';
+import { createSampleFile, finish, performanceReport, setMeasurement, runner } from './common';
 import { readConfigurationFile } from './config';
 import { utils } from 'platform/log';
 
@@ -577,4 +577,162 @@ if (process.platform === 'win32') {
             });
         });
     });
+
+    config.performance.run &&
+        Object.keys(config.regular.execute_only).length > 0 &&
+        Object.keys(config.performance.tests).forEach((alias: string, index: number) => {
+            const test = (config.performance.tests as any)[alias];
+            const testName = `Performance test #${index + 1} - (${test.alias})`;
+            if (test.ignore) {
+                console.log(`Test "${testName}" has been ignored`);
+                return;
+            }
+            it(testName, function () {
+                return runner(
+                    {
+                        list: { 1: testName },
+                        execute_only: [],
+                        files: {},
+                    },
+                    1,
+                    async (logger, done, collector) => {
+                        const measurement = setMeasurement();
+                        Session.create()
+                            .then(async (session: Session) => {
+                                // Set provider into debug mode
+                                session.debug(true, testName);
+                                const stream = session.getStream();
+                                if (stream instanceof Error) {
+                                    finish(session, done, stream);
+                                    return;
+                                }
+                                const events = session.getEvents();
+                                if (events instanceof Error) {
+                                    finish(session, done, events);
+                                    return;
+                                }
+                                const search = session.getSearch();
+                                if (search instanceof Error) {
+                                    finish(session, done, search);
+                                    return;
+                                }
+                                let home_dir = (process.env as any)['SH_HOME_DIR'];
+                                switch (index+1) {
+                                    case 1:
+                                        const tmpobj = createSampleFile(
+                                            5000,
+                                            logger,
+                                            (i: number) => `some line data: ${i}\n`,
+                                        );
+                                        stream
+                                            .observe(
+                                                new Factory.Stream()
+                                                    .asText()
+                                                    .process({
+                                                        command: `less ${tmpobj.name}`,
+                                                        cwd: process.cwd(),
+                                                        envs: process.env as { [key: string]: string },
+                                                    })
+                                                    .get()
+                                                    .sterilized(),
+                                            )
+                                            .catch(finish.bind(null, session, done));
+                                        break;
+                                    case 2:
+                                            // Create and open 50 files sequentially
+                                            for (let i = 0; i < 50; i++) {
+                                                const file = createSampleFile(
+                                                    100,
+                                                    logger,
+                                                    (j: number) => `file ${i} line data: ${j}\n`,
+                                                );
+
+                                                const result = await stream
+                                                    .observe(
+                                                        new Factory.Stream()
+                                                            .asText()
+                                                            .process({
+                                                                command: `less ${file.name}`,
+                                                                cwd: process.cwd(),
+                                                                envs: process.env as { [key: string]: string },
+                                                            })
+                                                            .get()
+                                                            .sterilized(),
+                                                    )
+                                                    .catch((err) => `File ${i} failed to open: ${err.message}`);
+                                            }
+                                            const results = measurement();
+                                            finish(
+                                                session,
+                                                done,
+                                                performanceReport(
+                                                    testName,
+                                                    results.ms,
+                                                    test.expectation_ms,
+                                                    `Processed 50 files`,
+                                                )
+                                                    ? undefined
+                                                    : new Error(`${testName} is fail`),
+                                            );
+                                        break;
+                                    case 3:
+                                        const tmpobj2 = createSampleFile(
+                                            5000,
+                                            logger,
+                                            (i: number) => `some line data: ${i}\n`,
+                                        );
+                                        stream
+                                            .observe(
+                                                new Factory.Stream()
+                                                    .asText()
+                                                    .process({
+                                                        command: `less ${tmpobj2.name}`,
+                                                        cwd: process.cwd(),
+                                                        envs: process.env as { [key: string]: string },
+                                                    })
+                                                    .get()
+                                                    .sterilized(),
+                                            )
+                                            // .then(() => session.destroy()) // Close the session after observing the stream
+                                            .catch(finish.bind(null, session, done));
+                                        break;
+                                    default:
+                                        finish(
+                                            undefined,
+                                            done,
+                                            new Error(`Unsupported format: ${test.open_as}`),
+                                        );
+                                        return;
+                                }
+                                events.FileRead.subscribe(() => {
+                                    const results = measurement();
+                                    finish(
+                                        session,
+                                        done,
+                                        performanceReport(
+                                            testName,
+                                            results.ms,
+                                            test.expectation_ms,
+                                        )
+                                            ? undefined
+                                            : new Error(`${testName} is fail`),
+                                    );
+                                });
+                            })
+                            .catch((err: Error) => {
+                                finish(
+                                    undefined,
+                                    done,
+                                    new Error(
+                                        `Fail to create session due error: ${
+                                            err instanceof Error ? err.message : err
+                                        }`,
+                                    ),
+                                );
+                            });
+                    },
+                );
+            });
+        });
+
 }

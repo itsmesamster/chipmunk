@@ -896,25 +896,6 @@ describe('Observe', function () {
                                                     .sterilized(),
                                             )
                                             .catch(finish.bind(null, session, done));
-                                        events.StreamUpdated.subscribe((rows: number) => {
-                                            try {
-                                                if (rows < 5000) {
-                                                    return;
-                                                }
-                                                await stream.grab(500, 7);
-                                                finish(session, done);
-                                            } catch (err) {
-                                                finish(
-                                                    undefined,
-                                                    done,
-                                                    new Error(
-                                                        `Fail to finish test due error: ${
-                                                            err instanceof Error ? err.message : err
-                                                        }`,
-                                                    ),
-                                                );
-                                            }
-                                        });
                                         break;
                                     default:
                                         finish(

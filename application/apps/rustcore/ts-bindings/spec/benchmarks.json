@@ -51,6 +51,43 @@
                 }
             }
         },
+        "stream": {
+            "regular": {
+                "execute_only": [-1],
+                "list": {
+                    "1": "Test 1. Observe and grab",
+                    "2": "Test 2. Life cycle",
+                    "3": "Test 3. Invalid data source",
+                    "4": "Test 4. Updated stream",
+                    "5": "Test 5. Updated stream search",
+                    "6": "Test 6. Aborting stream",
+                    "7": "Test 7. Multiple stream & SDE test"
+                },
+                "files": {
+                }
+            },
+            "performance": {
+                /* In false will prevent running performance tests */
+                "run": true,
+                "tests": {
+                    "test1": {
+                        "alias": "startup measurement",
+                        "file": "",
+                        "expectation_ms": 1000
+                    },
+                    "test2": {
+                        "alias": "Open 50 sessions for small files",
+                        "file": "",
+                        "expectation_ms": 15000
+                    },
+                    "test3": {
+                        "alias": "Shutdown Measurements",
+                        "file": "",
+                        "expectation_ms": 10000
+                    }
+                }
+            }
+        },
         "indexes": {
             "regular": {
                 "execute_only": [-1],
@@ -66,11 +103,6 @@
                 "tests": {
                     "test1": {
                         "alias": "Switch to breadcrumb mode",
-                        "file": "test_files/indexing_access_huge.log",
-                        "expectation_ms": 15000
-                    },
-                    "test2": {
-                        "alias": "Switch to breadcrumb mode new",
                         "file": "test_files/indexing_access_huge.log",
                         "expectation_ms": 15000
                     }

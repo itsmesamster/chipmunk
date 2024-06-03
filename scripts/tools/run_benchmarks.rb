@@ -7,19 +7,23 @@ REPO_NAME = 'chipmunk'
 
 RAKE_COMMANDS = [
   'rake clean',
-  'rake bindings:test:indexes',
-  'rake bindings:test:search',
+  'rake bindings:test:stream',
+  # 'rake bindings:test:indexes',
+  # 'rake bindings:test:search',
   'rake bindings:test:observe'
 ]
 
 SHELL_SCRIPT_PATH = 'application/apps/rustcore/ts-bindings/spec'
 SHELL_SCRIPT_NAME = 'setup_config.sh'
 
-unless ARGV.length == 1
+if ARGV.length > 1
   puts "Usage: ruby scripts/tools/run_benchmarks.rb <number_of_releases>"
   exit(1)
 end
-NUMBER_OF_RELEASES = ARGV[0].to_i
+
+NUMBER_OF_RELEASES = ARGV[0].to_i == 0 ? 1 : ARGV[0].to_i
+
+puts "running benchmarks for last #{NUMBER_OF_RELEASES} releases"
 
 client = Octokit::Client.new()
 
@@ -34,7 +38,8 @@ releases.take(NUMBER_OF_RELEASES).each_with_index do |release, index|
     'JASMIN_TEST_CONFIGURATION' => './spec/benchmarks.json',
     'PERFORMANCE_RESULTS_FOLDER' => 'chipmunk_performance_results',
     'PERFORMANCE_RESULTS' => "Benchmark_#{release.tag_name}.json",
-    'SH_HOME_DIR' => "/home/ubuntu"
+    # 'SH_HOME_DIR' => "/home/ubuntu",
+    'SH_HOME_DIR' => "/Users/sameer.g.srivastava"
   }
   # Create a temporary directory for this release
   Dir.mktmpdir do |temp_dir|
