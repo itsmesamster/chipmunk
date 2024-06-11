@@ -54,7 +54,7 @@ jobs:
   #         rake bindings:test:observe
   invoke_jasmine_tests:
     name: Invoke Jasmine performance tests
-    runs-on: X64
+    runs-on: self-hosted-runner-ubuntu
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -67,6 +67,7 @@ jobs:
           curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
           echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
           sudo apt-get update
+          corepack enable
           sudo apt-get install -y yarn
           yarn --version
           sudo apt update

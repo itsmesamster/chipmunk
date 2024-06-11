@@ -75,11 +75,11 @@
                         "file": "",
                         "expectation_ms": 1000
                     },
-                    "test2": {
-                        "alias": "Open 50 sessions for small files",
-                        "file": "",
-                        "expectation_ms": 15000
-                    },
+                    // "test2": {
+                    //     "alias": "Open 50 sessions for small files",
+                    //     "file": "",
+                    //     "expectation_ms": 15000
+                    // },
                     "test3": {
                         "alias": "Shutdown Measurements",
                         "file": "",

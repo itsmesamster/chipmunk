@@ -38,8 +38,8 @@ releases.take(NUMBER_OF_RELEASES).each_with_index do |release, index|
     'JASMIN_TEST_CONFIGURATION' => './spec/benchmarks.json',
     'PERFORMANCE_RESULTS_FOLDER' => 'chipmunk_performance_results',
     'PERFORMANCE_RESULTS' => "Benchmark_#{release.tag_name}.json",
-    # 'SH_HOME_DIR' => "/home/ubuntu",
-    'SH_HOME_DIR' => "/Users/sameer.g.srivastava"
+    'SH_HOME_DIR' => "/chipmunk"
+    # 'SH_HOME_DIR' => "/Users/sameer.g.srivastava"
   }
   # Create a temporary directory for this release
   Dir.mktmpdir do |temp_dir|
