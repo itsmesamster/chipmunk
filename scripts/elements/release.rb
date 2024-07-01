@@ -99,6 +99,19 @@ namespace :release do
       options = "--force --timestamp --options runtime --verbose --deep --strict --entitlements ./resources/mac/entitlements.mac.plist"
       app_path = "#{Paths::RELEASE_BUILD}/chipmunk.app"
 
+      # Start with the main app path
+      # paths_to_sign = [app_path]
+      # paths_to_sign << "#{app_path}/Contents/Resources/bin/updater" # add updater
+      # paths_to_sign << "#{app_path}/Contents/MacOS/chipmunk" # add executable
+      # paths_to_sign += Dir.glob("#{app_path}/**/*.dylib") # add all .dylib files
+      # # paths_to_sign += Dir.glob("#{app_path}/Contents/Frameworks/**/*.framework/Versions/**/**")
+
+      # paths_to_sign += Dir.glob("#{app_path}/Contents/Frameworks/**/*.framework/Versions/**/**").select { |path| File.file?(path)} # add all frameworks
+
+      # paths_to_sign.uniq
+      # puts "Paths are"
+      # paths_to_sign.each {|path| puts "#{path} #{File.file?(path)}"}
+
       # Array of paths to sign
       paths_to_sign = [
         app_path,
@@ -115,8 +128,10 @@ namespace :release do
 
       # Sign each path
       paths_to_sign.each do |path|
+        puts "Signing path #{path}"
         command = "codesign --sign \"#{ENV['SIGNING_ID']}\" #{options} \"#{path}\""
         Shell.sh "#{command}"
+        puts "Signed path #{path}\n\n"
       end
 
       Shell.sh "codesign -vvv --deep --strict \"#{app_path}\""
