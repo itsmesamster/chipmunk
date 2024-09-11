@@ -68,8 +68,8 @@ def set_environment_vars
     'JASMIN_TEST_CONFIGURATION' => './spec/benchmarks.json',
     'PERFORMANCE_RESULTS_FOLDER' => 'chipmunk_performance_results',
     'PERFORMANCE_RESULTS' => '',
-    'SH_HOME_DIR' => "/chipmunk"
-    # 'SH_HOME_DIR' => "/Users/sameer.g.srivastava"
+    # 'SH_HOME_DIR' => "/chipmunk"
+    'SH_HOME_DIR' => "/Users/sameer.g.srivastava"
   }
 end
 

@@ -31,16 +31,18 @@
                 "alias": "Stream - Open 50 sessions",
                 "file": "",
                 "expectation_ms": 200000
+
             },
             "test7": {
                 "alias": "Indexes - Switch to breadcrumb mode",
                 "file": "test_files/indexing_access_huge.log",
                 "expectation_ms": 300000
+
             },
             "test8": {
                 "alias": "Assign & single search",
                 "file": "test_files/indexing_access_huge.log",
-                "expectation_ms": 30000
+                "expectation_ms": 3000
             },
             "test9": {
                 "alias": "Assign & multiple search",

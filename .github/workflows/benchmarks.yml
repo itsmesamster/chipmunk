@@ -45,14 +45,11 @@ jobs:
 
       - name: Run Jasmine performance tests
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          export PATH="/root/.cargo/bin:$PATH"
-          source ~/.bashrc
-          if [[ "${{ github.event_name }}" == 'workflow_dispatch' && "${{ github.event.inputs.pr_id }}" -eq 0 ]]; then
+          if [[ "${{ github.event_name }}" == 'workflow_dispatch' && "${{ github.event.inputs.pr_id }}" =~ ^[0-9]+$ ]]; then
+            ruby scripts/benchmarks/process.rb PR~${{ github.event.inputs.pr_id }}
+          elif [[ "${{ github.event_name }}" == 'workflow_dispatch' && "${{ github.event.inputs.pr_id }}" -eq 0 ]]; then
             echo "Running manually"
             ruby scripts/benchmarks/process.rb 1
-          elif [[ "${{ github.event_name }}" == 'workflow_dispatch' && "${{ github.event.inputs.pr_id }}" =~ ^[0-9]+$ ]]; then
-            ruby scripts/benchmarks/process.rb PR~${{ github.event.inputs.pr_id }}
           elif [[ "${{ github.event_name }}" != 'workflow_dispatch' ]]; then
             ruby scripts/benchmarks/process.rb 1
           fi
