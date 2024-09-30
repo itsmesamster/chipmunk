@@ -1,6 +1,7 @@
 name: BuildAndReleaseMaster
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "*"
