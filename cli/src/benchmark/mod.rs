@@ -31,6 +31,12 @@ pub enum BenchTarget {
     },
     /// Lists all the available benchmarks in configuration files.
     List,
+    /// Runs all benchmarks, optionally filtering by `ci_ignore`.
+    RunAll {
+        /// Include benchmarks with `ci_ignore = true`
+        #[arg(long, default_value = "false")]
+        ci_ignore: bool,
+    },
 }
 
 impl BenchTarget {
@@ -53,6 +59,27 @@ impl BenchTarget {
                 let core = core::ConfigsInfos::load()?;
                 core.print_list();
                 println!();
+            }
+            BenchTarget::RunAll { ci_ignore } => {
+                let core = core::ConfigsInfos::load()?;
+
+                for bench in core.benches.iter() {
+                    if !ci_ignore && bench.ci_ignore.unwrap_or(false) {
+                        continue;
+                    }
+
+                    println!("Running benchmark: {}", bench.name);
+                    let input = bench.default_input.clone();
+                    let sample_size = bench.default_sample_size;
+
+                    core::run_benchmark(
+                        bench.name.clone(),
+                        input,
+                        None, // No additional config in `run-all`
+                        1,    // Default to one run per benchmark
+                        sample_size,
+                    )?;
+                }
             }
         }
 

@@ -24,7 +24,7 @@ pub const SAMPLE_SIZE_ENV_VAR: &str = "CHIPMUNK_BENCH_SAMPLE_SIZE";
 /// Configurations info for rust core benchmarks.
 pub struct ConfigsInfos {
     #[serde(rename = "bench")]
-    benches: Vec<BenchmarkInfo>,
+    pub benches: Vec<BenchmarkInfo>,
 }
 
 impl ConfigsInfos {
@@ -71,10 +71,13 @@ impl ConfigsInfos {
 /// Infos for a benchmark in rust core.
 pub struct BenchmarkInfo {
     /// Name of the benchmark as defined in `Cargo.toml` file.
-    name: String,
+    pub name: String,
     /// Library name where the benchmark is defined.
     /// It represents the relative path of this library starting from rust core main path `.../indexer`.
-    library: String,
+    pub library: String,
+    pub ci_ignore: Option<bool>,
+    pub default_input: Option<String>,
+    pub default_sample_size: Option<usize>,
 }
 
 pub fn run_benchmark(
@@ -90,6 +93,9 @@ pub fn run_benchmark(
         .into_iter()
         .find(|b| b.name == name)
         .with_context(|| format!("Benchmark with the name '{name}' is not defined"))?;
+
+    let input = input_source.or_else(|| bench.default_input.clone());
+    let sample_size = sample_size.or(bench.default_sample_size);
 
     let cwd = Target::Core.cwd().join(bench.library);
     let cmd = format!("cargo bench --bench {}", bench.name);
@@ -110,12 +116,12 @@ pub fn run_benchmark(
         let mut command = shell_std_command();
         command.arg(&cmd);
 
-        if let Some(input) = input_source.as_deref() {
+        if let Some(input) = input.as_deref() {
             // Assuming that the input can be a path for a file in most cases, we need to resolve
             // it and provide the absolute path before changing the current directory when running
             // the benchmark command.
-            let input = resolve_if_path(input);
-            command.env(INPUT_SOURCE_ENV_VAR, input);
+            let resolved_input = resolve_if_path(input);
+            command.env(INPUT_SOURCE_ENV_VAR, resolved_input);
         }
 
         if let Some(config) = additional_config.as_deref() {

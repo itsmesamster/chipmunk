@@ -1,68 +1,89 @@
 [[bench]]
 name = "map_benchmarks"
 library = "processor"
+ci_ignore = true
 
 [[bench]]
 name = "dlt_producer"
 library = "sources"
+default_sample_size = 10
+default_input = "./application/developing/resources/attachments.dlt"
 
 [[bench]]
 name = "someip_producer"
 library = "sources"
+default_input = "./application/developing/resources/someip.pcapng"
 
 [[bench]]
 name = "someip_legacy_producer"
 library = "sources"
+default_input = "./application/developing/resources/someip.pcap"
 
 [[bench]]
 name = "text_producer"
 library = "sources"
+default_input = "./application/developing/resources/chinese_poem.txt"
 
 [[bench]]
 name = "mocks_once_producer"
 library = "sources"
+default_sample_size = 10
+ci_ignore = true
 
 [[bench]]
 name = "mocks_once_producer_jemalloc"
 library = "sources"
+ci_ignore = true
 
 [[bench]]
 name = "mocks_once_producer_mimalloc"
 library = "sources"
+ci_ignore = true
 
 [[bench]]
 name = "mocks_once_parallel"
 library = "sources"
+default_sample_size = 10
+ci_ignore = true
 
 [[bench]]
 name = "mocks_once_parallel_jemalloc"
 library = "sources"
+ci_ignore = true
 
 [[bench]]
 name = "mocks_once_parallel_mimalloc"
 library = "sources"
+ci_ignore = true
 
 [[bench]]
 name = "mocks_multi_producer"
 library = "sources"
+default_sample_size = 10
+ci_ignore = true
 
 [[bench]]
 name = "mocks_multi_producer_jemalloc"
 library = "sources"
+ci_ignore = true
 
 [[bench]]
 name = "mocks_multi_producer_mimalloc"
 library = "sources"
+ci_ignore = true
 
 [[bench]]
 name = "mocks_multi_parallel"
 library = "sources"
+default_sample_size = 10
+ci_ignore = true
 
 [[bench]]
 name = "mocks_multi_parallel_jemalloc"
 library = "sources"
+ci_ignore = true
 
 [[bench]]
 name = "mocks_multi_parallel_mimalloc"
 library = "sources"
-
+ci_ignore = true
