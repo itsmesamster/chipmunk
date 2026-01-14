@@ -39,6 +39,49 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Configure sccache (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          echo "SCCACHE_DIR=/mnt/sccache" >> $GITHUB_ENV
+          echo "SCCACHE_CACHE_SIZE=8G" >> $GITHUB_ENV
+          echo "CARGO_TARGET_DIR=/mnt/target" >> $GITHUB_ENV
+          echo "TMPDIR=/mnt/tmp" >> $GITHUB_ENV
+          echo "TEMP=/mnt/tmp" >> $GITHUB_ENV
+          echo "TMP=/mnt/tmp" >> $GITHUB_ENV
+      - name: Configure Yarn cache (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "YARN_CACHE_FOLDER=$RUNNER_TEMP/yarn-cache" >> $GITHUB_ENV
+          mkdir -p "$RUNNER_TEMP/yarn-cache"
+      - name: Configure sccache (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          echo "SCCACHE_DIR=$RUNNER_TEMP/sccache" >> $GITHUB_ENV
+          echo "SCCACHE_CACHE_SIZE=8G" >> $GITHUB_ENV
+          echo "CARGO_TARGET_DIR=$RUNNER_TEMP/target" >> $GITHUB_ENV
+      - name: Configure sccache (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          echo "SCCACHE_DIR=$RUNNER_TEMP/sccache" >> $GITHUB_ENV
+          echo "SCCACHE_CACHE_SIZE=8G" >> $GITHUB_ENV
+          echo "CARGO_TARGET_DIR=$RUNNER_TEMP/target" >> $GITHUB_ENV
+      - name: Prepare build directories (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo mkdir -p /mnt/target /mnt/sccache /mnt/tmp
+          sudo chown -R runner:runner /mnt
+          df -h
       - name: libudev-dev
         if: runner.os == 'Linux'
         run: |
@@ -52,23 +95,24 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           rust-version: ${{ matrix.rust }}
-      - name: Install cargo-binstall
+      - name: Install cargo-binstall (Unix)
+        if: runner.os != 'Windows'
         uses: cargo-bins/cargo-binstall@v1.9.0
-      - name: set sccache env var
+      - name: Install cargo-binstall (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
         run: |
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          RUSTC_WRAPPER= cargo install cargo-binstall
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.9
+        with:
+          version: "v0.12.0"
       - name: cargo binstall nj-cli
         run: cargo binstall nj-cli
       - name: install wasm-pack
         run: cargo binstall wasm-pack
       - name: Install Build CLI tool
         run: cargo install --path=cli/development-cli --locked
-        env:
-          SCCACHE_GHA_ENABLED: "true"
-          RUSTC_WRAPPER: "sccache"
       - name: enable corepack for yarnpkg upgrade
         run: |
           corepack enable
@@ -98,6 +142,23 @@ jobs:
             "$KEYCHAIN_NAME"
           security set-keychain-settings "$KEYCHAIN_NAME"
           security unlock-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_NAME"
+      - name: Restore default Cargo target layout (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p cli/chipmunk-cli
+          rm -rf cli/chipmunk-cli/target
+          ln -s "$CARGO_TARGET_DIR" cli/chipmunk-cli/target
+      - name: Enable Long Paths (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          git config --system core.longpaths true
+          reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
+      - name: Debug Workspace (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path . -Filter "shell_tools" -Recurse -ErrorAction SilentlyContinue
+          cargo metadata --format-version 1 | Select-String "shell_tools"
       - name: build release macOS
         if: runner.os == 'macOS'
         run: |
