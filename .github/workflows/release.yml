@@ -86,6 +86,19 @@ jobs:
             -s \
             -k "$KEYCHAIN_PWD" \
             "$KEYCHAIN_NAME"
+      - name: Restore default Cargo target layout (symlink)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p cli/chipmunk-cli
+          rm -rf cli/chipmunk-cli/target
+          ln -s "$CARGO_TARGET_DIR" cli/chipmunk-cli/target
+      - name: Restore default Cargo target layout (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir -p cli/chipmunk-cli
+          rm -rf cli/chipmunk-cli/target
+          ln -s "$CARGO_TARGET_DIR" cli/chipmunk-cli/target
       - name: build release
         working-directory: ./application/holder
         run: rake release:prod --trace
