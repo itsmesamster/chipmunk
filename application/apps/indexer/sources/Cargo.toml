@@ -23,6 +23,7 @@ serde = { workspace = true, features = ["derive"] }
 uuid = { workspace = true , features = ["serde", "v4"] }
 stypes = { path = "../stypes", features=["rustcore"] }
 socket2 = "0.5.8"
+shell-tools = "0.1.5"
 
 [dev-dependencies]
 env_logger.workspace = true
