@@ -34,7 +34,7 @@ jobs:
       CSC_FOR_PULL_REQUEST: true
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-latest, macOS-latest]
+        os: [macos-15-intel]
         rust: [stable]
     steps:
       - name: Checkout
@@ -59,14 +59,14 @@ jobs:
       - name: Install cargo-binstall (Unix)
         if: runner.os != 'Windows'
         uses: cargo-bins/cargo-binstall@v1.9.0
-        with:
-          version: "v0.12.0"
       - name: set sccache env var
         run: |
           echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
           echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.9
+        with:
+          version: "v0.12.0"
       - name: cargo binstall nj-cli
         run: cargo binstall nj-cli
       - name: install wasm-pack
