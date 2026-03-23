@@ -76,9 +76,12 @@ jobs:
         env:
           SCCACHE_GHA_ENABLED: "true"
           RUSTC_WRAPPER: "sccache"
-      - name: enable corepack for yarnpkg upgrade
+      - name: Setup Yarn
         run: |
           corepack enable
+          echo "YARN_ENABLE_GLOBAL_CACHE=false" >> $GITHUB_ENV
+          echo "YARN_CACHE_FOLDER=.yarn/cache" >> $GITHUB_ENV
+          yarn config set enableGlobalCache false
           yarn cache clean
       - name: setup keychain for signing and notarising
         if: runner.os == 'macOS'
