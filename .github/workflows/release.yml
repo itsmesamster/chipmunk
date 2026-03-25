@@ -79,9 +79,7 @@ jobs:
       - name: Setup Yarn
         run: |
           corepack enable
-          echo "YARN_ENABLE_GLOBAL_CACHE=false" >> $GITHUB_ENV
-          echo "YARN_CACHE_FOLDER=.yarn/cache" >> $GITHUB_ENV
-          yarn config set enableGlobalCache false
+          corepack prepare yarn@4.6.0 --activate
           yarn cache clean
       - name: setup keychain for signing and notarising
         if: runner.os == 'macOS'
