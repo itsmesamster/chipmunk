@@ -100,6 +100,7 @@ jobs:
           security set-keychain-settings build.keychain
           security unlock-keychain -p "$KEYCHAIN_PWD" build.keychain
       - name: Build alpha release
+        shell: bash
         run: |
           if [ "${{ runner.os }}" = "macOS" ]; then
             cargo run --manifest-path tools/release-alpha/Cargo.toml -- --code-sign tools/release-alpha/config/codesign_macos.toml
