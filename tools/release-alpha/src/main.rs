@@ -77,8 +77,14 @@ fn parse_args() -> Result<Cli, String> {
 
 fn build_alpha() -> Result<(), String> {
     let status = Command::new("cargo")
-        .args(["build", "--release", "--locked", "--manifest-path", "Cargo.toml"])
-        .current_dir(alpha_app_root())
+        .args([
+            "build",
+            "--release",
+            "--locked",
+            "--manifest-path",
+            "gui/application/Cargo.toml",
+        ])
+        .current_dir(alpha_workspace_root())
         .status()
         .map_err(|err| format!("Building Chipmunk Alpha failed: {err}"))?;
 
