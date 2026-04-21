@@ -1,0 +1,15 @@
+##############################################################
+### Configuration for code signing and notarizing on MacOS ###
+##############################################################
+
+[env_vars]
+check_enabled = ["APPLEID", "APPLEIDPASS", "TEAMID", "SIGNING_ID"]
+check_disabled = ["SKIP_NOTARIZE"]
+signing_id = "SIGNING_ID"
+
+[notarize_command]
+command = "xcrun notarytool submit --force --wait --verbose"
+env_apple_id = "APPLEID"
+env_team_id = "TEAMID"
+env_password = "APPLEIDPASS"
+accepted_line = "status: Accepted"

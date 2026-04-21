@@ -1,0 +1,154 @@
+name: BuildAndReleaseChipmunkAlpha
+
+on:
+  push:
+    tags:
+      - "chipmunk-alpha-v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to create or update, for example chipmunk-alpha-v4.0.0-alpha.1"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: Prepare release metadata
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.vars.outputs.release_tag }}
+      version: ${{ steps.vars.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Resolve release variables
+        id: vars
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            release_tag="${{ inputs.release_tag }}"
+          else
+            release_tag="${{ github.ref_name }}"
+          fi
+
+          version="$(cargo pkgid --manifest-path application/apps/indexer/gui/application/Cargo.toml -p application | sed -E 's/.*#(.*)$/\1/')"
+
+          echo "release_tag=${release_tag}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+  create_release:
+    name: Create alpha release
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.release_tag }}
+          target_commitish: ${{ github.sha }}
+          name: Chipmunk Alpha ${{ needs.prepare.outputs.version }}
+          prerelease: true
+          generate_release_notes: true
+
+  build_release:
+    name: Build alpha release
+    needs:
+      - prepare
+      - create_release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            asset_suffix: linux-x86_64
+          - os: windows-latest
+            asset_suffix: windows-x86_64
+          - os: macos-15-intel
+            asset_suffix: macos-x86_64
+          - os: macos-latest
+            asset_suffix: macos-arm64
+    env:
+      APPLEID: ${{ secrets.APPLEID }}
+      APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+      SIGNING_ID: ${{ secrets.SIGNING_ID }}
+      TEAMID: ${{ secrets.TEAMID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libgtk-3-dev \
+            libudev-dev \
+            libwayland-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libxcb-xkb-dev \
+            pkg-config
+      - name: Install rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache Rust build outputs
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            application/apps/indexer -> target
+            tools/release-alpha -> target
+      - name: Setup keychain for signing and notarizing
+        if: runner.os == 'macOS'
+        run: |
+          security create-keychain -p "$KEYCHAIN_PWD" build.keychain
+          security default-keychain -s build.keychain
+          certfile="${HOME}/buildcert.p12"
+          echo "$CSC_LINK" | base64 -d > "$certfile"
+          security import \
+            "$certfile" \
+            -P "$CSC_KEY_PASSWORD" \
+            -A \
+            -k build.keychain
+          rm "$certfile"
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$KEYCHAIN_PWD" \
+            build.keychain
+          security set-keychain-settings build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PWD" build.keychain
+      - name: Build alpha release
+        run: |
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            cargo run --manifest-path tools/release-alpha/Cargo.toml -- --code-sign tools/release-alpha/config/codesign_macos.toml
+          else
+            cargo run --manifest-path tools/release-alpha/Cargo.toml --
+          fi
+      - name: List alpha release files
+        working-directory: ./application/apps/indexer/gui/application/release
+        run: ls
+      - name: Upload CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chipmunk-alpha-${{ matrix.asset_suffix }}
+          path: |
+            ./application/apps/indexer/gui/application/release/*.tgz
+            ./application/apps/indexer/gui/application/release/*.zip
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.release_tag }}
+          files: |
+            ./application/apps/indexer/gui/application/release/*.tgz
+            ./application/apps/indexer/gui/application/release/*.zip
