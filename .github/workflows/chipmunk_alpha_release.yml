@@ -15,64 +15,35 @@ permissions:
   contents: write
 
 jobs:
-  prepare:
-    name: Prepare release metadata
-    runs-on: ubuntu-latest
-    outputs:
-      release_tag: ${{ steps.vars.outputs.release_tag }}
-      version: ${{ steps.vars.outputs.version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Resolve release variables
-        id: vars
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            release_tag="${{ inputs.release_tag }}"
-          else
-            release_tag="${{ github.ref_name }}"
-          fi
-
-          version="$(cargo pkgid --manifest-path application/apps/indexer/gui/application/Cargo.toml -p application | sed -E 's/.*#(.*)$/\1/')"
-
-          echo "release_tag=${release_tag}" >> "$GITHUB_OUTPUT"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-
   create_release:
     name: Create alpha release
-    needs: prepare
+    if: ${{ startsWith(github.ref_name, 'chipmunk-alpha-v') }}
     runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    env:
+      PUBLISH_FOR_PULL_REQUEST: true
+      CSC_FOR_PULL_REQUEST: true
     steps:
-      - name: Create GitHub prerelease
-        uses: softprops/action-gh-release@v2
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.prepare.outputs.release_tag }}
-          target_commitish: ${{ github.sha }}
-          name: Chipmunk Alpha ${{ needs.prepare.outputs.version }}
           prerelease: true
-          generate_release_notes: true
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
 
   build_release:
     name: Build alpha release
-    needs:
-      - prepare
-      - create_release
+    needs: create_release
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-22.04
-            asset_suffix: linux-x86_64
-          - os: windows-latest
-            asset_suffix: windows-x86_64
-          - os: macos-15-intel
-            asset_suffix: macos-x86_64
-          - os: macos-latest
-            asset_suffix: macos-arm64
+        os: [ubuntu-22.04, windows-latest, macos-15-intel, macOS-latest]
+        rust: [stable]
     env:
       APPLEID: ${{ secrets.APPLEID }}
       APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
