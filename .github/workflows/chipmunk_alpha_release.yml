@@ -36,15 +36,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-latest, macos-15-intel, macOS-latest]
+        os: [ubuntu-22.04, windows-latest]
         rust: [stable]
     env:
       APPLEID: ${{ secrets.APPLEID }}
       APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
       CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
       CSC_LINK: ${{ secrets.CSC_LINK }}
+      INSTALLER_CSC_KEY_PASSWORD: ${{ secrets.INSTALLER_CSC_KEY_PASSWORD }}
+      INSTALLER_CSC_LINK: ${{ secrets.INSTALLER_CSC_LINK }}
       KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
       SIGNING_ID: ${{ secrets.SIGNING_ID }}
+      INSTALLER_SIGNING_ID: ${{ secrets.INSTALLER_SIGNING_ID }}
       TEAMID: ${{ secrets.TEAMID }}
     steps:
       - name: Checkout
@@ -72,6 +75,19 @@ jobs:
         with:
           workspaces: |
             application/apps/indexer -> target
+      - name: Install Windows installer tooling
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install wixtoolset --no-progress -y
+          $wixRoot = Get-ChildItem "${env:ProgramFiles(x86)}" -Directory -Filter "WiX Toolset*" |
+            Sort-Object Name -Descending |
+            Select-Object -First 1
+          if ($null -eq $wixRoot) {
+            throw "WiX Toolset installation was not found"
+          }
+          $wixBin = Join-Path $wixRoot.FullName "bin"
+          Add-Content $env:GITHUB_PATH $wixBin
       - name: Setup keychain for signing and notarizing
         if: runner.os == 'macOS'
         run: |
@@ -85,6 +101,17 @@ jobs:
             -A \
             -k build.keychain
           rm "$certfile"
+          if [ -n "$INSTALLER_CSC_LINK" ]; then
+            installer_certfile="${HOME}/installer-buildcert.p12"
+            installer_cert_password="${INSTALLER_CSC_KEY_PASSWORD:-$CSC_KEY_PASSWORD}"
+            echo "$INSTALLER_CSC_LINK" | base64 -d > "$installer_certfile"
+            security import \
+              "$installer_certfile" \
+              -P "$installer_cert_password" \
+              -A \
+              -k build.keychain
+            rm "$installer_certfile"
+          fi
           security set-key-partition-list \
             -S apple-tool:,apple:,codesign: \
             -s \
@@ -92,6 +119,7 @@ jobs:
             build.keychain
           security set-keychain-settings build.keychain
           security unlock-keychain -p "$KEYCHAIN_PWD" build.keychain
+          security find-identity -v -p codesigning build.keychain
       - name: Build app release
         shell: bash
         run: |
@@ -110,6 +138,10 @@ jobs:
           path: |
             ./application/apps/indexer/gui/application/release/*.tgz
             ./application/apps/indexer/gui/application/release/*.zip
+            ./application/apps/indexer/gui/application/release/*.msi
+            ./application/apps/indexer/gui/application/release/*.pkg
+            ./application/apps/indexer/gui/application/release/chipmunk@*-linux-x86_64
+            ./application/apps/indexer/gui/application/release/chipmunk@*-linux-arm64
       - name: Upload release asset
         uses: softprops/action-gh-release@v2
         with:
@@ -117,3 +149,7 @@ jobs:
           files: |
             ./application/apps/indexer/gui/application/release/*.tgz
             ./application/apps/indexer/gui/application/release/*.zip
+            ./application/apps/indexer/gui/application/release/*.msi
+            ./application/apps/indexer/gui/application/release/*.pkg
+            ./application/apps/indexer/gui/application/release/chipmunk@*-linux-x86_64
+            ./application/apps/indexer/gui/application/release/chipmunk@*-linux-arm64
