@@ -3,7 +3,8 @@ name: BuildAndReleaseChipmunkAlpha
 on:
   push:
     tags:
-      - "*.*.*-alpha.*"
+      - "*"
+      - "!*.*.*-legacy.*"
 
 permissions:
   contents: write
@@ -11,7 +12,7 @@ permissions:
 jobs:
   create_release:
     name: Create app release
-    if: ${{ contains(github.ref_name, '-alpha.') }}
+    if: ${{ !contains(github.ref_name, '-legacy.') }}
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -22,7 +23,7 @@ jobs:
       - name: Release
         if: startsWith(github.ref, 'refs/tags/')
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -43,8 +44,11 @@ jobs:
       APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
       CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
       CSC_LINK: ${{ secrets.CSC_LINK }}
+      INSTALLER_CSC_KEY_PASSWORD: ${{ secrets.INSTALLER_PWD }}
+      INSTALLER_CSC_LINK: ${{ secrets.INSTALLER_KEY }}
       KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
       SIGNING_ID: ${{ secrets.SIGNING_ID }}
+      INSTALLER_SIGNING_ID: ${{ secrets.INSTALLER_SIGNING_ID }}
       TEAMID: ${{ secrets.TEAMID }}
     steps:
       - name: Checkout
@@ -74,6 +78,19 @@ jobs:
             . -> target
       - name: Install just
         run: cargo install just --locked
+      - name: Install Windows installer tooling
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install wixtoolset --no-progress -y
+          $wixRoot = Get-ChildItem "${env:ProgramFiles(x86)}" -Directory -Filter "WiX Toolset*" |
+            Sort-Object Name -Descending |
+            Select-Object -First 1
+          if ($null -eq $wixRoot) {
+            throw "WiX Toolset installation was not found"
+          }
+          $wixBin = Join-Path $wixRoot.FullName "bin"
+          Add-Content $env:GITHUB_PATH $wixBin
       - name: Setup keychain for signing and notarizing
         if: runner.os == 'macOS'
         run: |
@@ -87,6 +104,17 @@ jobs:
             -A \
             -k build.keychain
           rm "$certfile"
+          if [ -n "$INSTALLER_CSC_LINK" ]; then
+            installer_certfile="${HOME}/installer-buildcert.p12"
+            installer_cert_password="${INSTALLER_CSC_KEY_PASSWORD:-$CSC_KEY_PASSWORD}"
+            echo "$INSTALLER_CSC_LINK" | base64 -d > "$installer_certfile"
+            security import \
+              "$installer_certfile" \
+              -P "$installer_cert_password" \
+              -A \
+              -k build.keychain
+            rm "$installer_certfile"
+          fi
           security set-key-partition-list \
             -S apple-tool:,apple:,codesign: \
             -s \
@@ -94,6 +122,7 @@ jobs:
             build.keychain
           security set-keychain-settings build.keychain
           security unlock-keychain -p "$KEYCHAIN_PWD" build.keychain
+          security find-identity -v -p codesigning build.keychain
       - name: Build app release
         shell: bash
         run: |
@@ -108,14 +137,16 @@ jobs:
       - name: Upload CI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chipmunk-alpha-${{ matrix.os }}
+          name: chipmunk-${{ matrix.os }}-${{ matrix.rust }}
           path: |
             ./target/dist/*.tgz
-            ./target/dist/*.zip
+            ./target/dist/*.msi
+            ./target/dist/*.pkg
       - name: Upload release asset
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           files: |
             ./target/dist/*.tgz
-            ./target/dist/*.zip
+            ./target/dist/*.msi
+            ./target/dist/*.pkg

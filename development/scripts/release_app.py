@@ -7,13 +7,13 @@ if sys.version_info < (3, 7):
     raise SystemExit(1)
 
 import argparse
+import base64
 import os
 import platform
 import plistlib
 import shutil
 import subprocess
 import tarfile
-import zipfile
 from pathlib import Path
 
 try:
@@ -24,6 +24,8 @@ except ModuleNotFoundError:
 
 APP_NAME = "chipmunk.app"
 BUNDLE_ID = "com.esrlabs.chipmunk"
+WINDOWS_UPGRADE_CODE = "37525481-AF0C-479F-975A-2D61D8C7D6C4"
+DEFAULT_WINDOWS_TIMESTAMP_URL = "http://timestamp.digicert.com"
 
 
 def main():
@@ -42,11 +44,14 @@ def main():
 
     version = app_version()
     if is_macos():
-        archive = package_macos(version, code_sign=args.code_sign)
+        artifacts = package_macos(version, code_sign=args.code_sign)
+    elif is_windows():
+        artifacts = [package_portable(version), package_windows_msi(version)]
     else:
-        archive = package_portable(version)
+        artifacts = [package_portable(version), package_linux_update_binary(version)]
 
-    print("Chipmunk release artifact created: {}".format(archive))
+    for artifact in artifacts:
+        print("Chipmunk release artifact created: {}".format(artifact))
     return 0
 
 
@@ -72,23 +77,34 @@ def package_portable(version):
     staging_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(app_binary_path(), staging_dir / app_binary_name())
     shutil.copy2(repo_readme_path(), staging_dir / "README.md")
+    write_release_manifest(staging_dir)
 
-    if is_windows():
-        archive = app_release_path() / "{}.zip".format(archive_root)
-        zip_directory_contents(staging_dir, archive)
-    else:
-        archive = app_release_path() / "{}.tgz".format(archive_root)
-        with tarfile.open(archive, "w:gz") as tar:
-            tar.add(staging_dir, arcname=archive_root)
+    archive = app_release_path() / "{}.tgz".format(archive_root)
+    write_flat_tgz_archive(staging_dir, archive)
 
     return archive
 
 
-def zip_directory_contents(source_dir, archive):
-    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zip_file:
-        for path in sorted(source_dir.rglob("*")):
-            if path.is_file():
-                zip_file.write(path, path.relative_to(source_dir))
+def write_release_manifest(staging_dir):
+    entries = [".release"]
+    entries.extend(
+        sorted(path.name for path in staging_dir.iterdir() if path.name != ".release")
+    )
+    (staging_dir / ".release").write_text(
+        "{}\n".format("\n".join(entries)),
+        encoding="utf-8",
+    )
+
+
+def write_flat_tgz_archive(source_dir, archive):
+    with tarfile.open(archive, "w:gz") as tar:
+        for path in sorted(source_dir.iterdir(), key=lambda path: path.name):
+            tar.add(path, arcname=path.name)
+
+
+def write_tgz_archive(source_path, archive, arcname):
+    with tarfile.open(archive, "w:gz") as tar:
+        tar.add(source_path, arcname=arcname)
 
 
 def package_macos(version, code_sign):
@@ -118,21 +134,229 @@ def package_macos(version, code_sign):
     if signing_enabled:
         sign_app(app_root)
 
-    archive = app_release_path() / "chipmunk@{}-{}-portable.zip".format(
-        version, platform_name()
-    )
-    zip_macos_bundle(app_root, archive)
-
     if signing_enabled:
-        notarize_archive(archive)
+        notarization_dir = app_release_path() / "notarization"
+        notarization_archive = notarization_dir / "chipmunk-notarization.zip"
+        notarization_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            zip_macos_bundle(app_root, notarization_archive)
+            notarize_archive(notarization_archive)
+        finally:
+            shutil.rmtree(notarization_dir, ignore_errors=True)
+
         run(["xcrun", "stapler", "staple", str(app_root)], error="Stapling chipmunk app failed")
         run(
             ["xcrun", "stapler", "validate", str(app_root)],
             error="Validating stapled chipmunk app failed",
         )
-        zip_macos_bundle(app_root, archive)
 
-    return archive
+    archive = app_release_path() / "chipmunk@{}-{}-portable.tgz".format(
+        version, platform_name()
+    )
+    write_tgz_archive(app_root, archive, APP_NAME)
+
+    pkg = package_macos_pkg(app_root, version, code_sign=signing_enabled)
+
+    return [archive, pkg]
+
+
+def package_macos_pkg(app_root, version, code_sign):
+    pkg = app_release_path() / "chipmunk@{}-{}.pkg".format(
+        version, platform_name()
+    )
+    scripts_dir = app_release_path() / "pkg-scripts"
+    write_macos_pkg_scripts(scripts_dir)
+
+    cmd = [
+        "pkgbuild",
+        "--component",
+        str(app_root),
+        "--install-location",
+        "/Applications",
+        "--identifier",
+        BUNDLE_ID,
+        "--version",
+        installer_version(version),
+        "--scripts",
+        str(scripts_dir),
+    ]
+
+    installer_signing_enabled = code_sign and installer_signing_allowed()
+
+    if installer_signing_enabled:
+        cmd.extend(["--sign", require_env("INSTALLER_SIGNING_ID")])
+    elif code_sign:
+        warn_unsigned_macos_pkg()
+
+    cmd.append(str(pkg))
+    run(cmd, error="Creating macOS chipmunk pkg failed")
+
+    if installer_signing_enabled:
+        notarize_archive(pkg)
+        run(["xcrun", "stapler", "staple", str(pkg)], error="Stapling chipmunk pkg failed")
+        run(
+            ["xcrun", "stapler", "validate", str(pkg)],
+            error="Validating stapled chipmunk pkg failed",
+        )
+
+    return pkg
+
+
+def write_macos_pkg_scripts(scripts_dir):
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    postinstall = scripts_dir / "postinstall"
+    postinstall.write_text(
+        """#!/bin/sh
+
+APP_PATH="/Applications/{app_name}"
+CONSOLE_USER="$(/usr/bin/stat -f '%Su' /dev/console 2>/dev/null || true)"
+
+if [ -z "$CONSOLE_USER" ] || [ "$CONSOLE_USER" = "root" ] || [ "$CONSOLE_USER" = "loginwindow" ]; then
+  exit 0
+fi
+
+USER_ID="$(/usr/bin/id -u "$CONSOLE_USER" 2>/dev/null || true)"
+
+if [ -z "$USER_ID" ] || [ ! -d "$APP_PATH" ]; then
+  exit 0
+fi
+
+/bin/launchctl asuser "$USER_ID" /usr/bin/sudo -u "$CONSOLE_USER" /usr/bin/open "$APP_PATH" >/dev/null 2>&1 || true
+
+exit 0
+""".format(app_name=APP_NAME),
+        encoding="utf-8",
+    )
+    postinstall.chmod(0o755)
+
+
+def package_windows_msi(version):
+    wix_dir = app_release_path() / "wix"
+    wix_dir.mkdir(parents=True, exist_ok=True)
+
+    wxs = wix_dir / "chipmunk.wxs"
+    license_rtf = wix_dir / "license.rtf"
+    msi = app_release_path() / "chipmunk@{}-{}.msi".format(version, platform_name())
+    wixobj = wix_dir / "chipmunk.wixobj"
+
+    write_windows_license_rtf(license_rtf)
+    write_windows_wxs(wxs, version)
+
+    candle = find_windows_tool("candle.exe")
+    light = find_windows_tool("light.exe")
+
+    run(
+        [str(candle), "-nologo", "-out", str(wixobj), str(wxs)],
+        error="Compiling Windows MSI definition failed",
+    )
+    run(
+        [
+            str(light),
+            "-nologo",
+            "-ext",
+            "WixUIExtension",
+            "-ext",
+            "WixUtilExtension",
+            "-out",
+            str(msi),
+            str(wixobj),
+        ],
+        error="Linking Windows MSI failed",
+    )
+
+    sign_windows_file(msi)
+
+    return msi
+
+
+def write_windows_wxs(path, version):
+    exe = app_binary_path()
+    readme = repo_readme_path()
+    icon = windows_icon_path()
+    license_rtf = path.parent / "license.rtf"
+
+    path.write_text(
+        """<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="Chipmunk" Language="1033" Version="{installer_version}" Manufacturer="ESR Labs" UpgradeCode="{upgrade_code}">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of Chipmunk is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <Icon Id="ChipmunkIcon" SourceFile="{icon}" />
+    <Property Id="ARPPRODUCTICON" Value="ChipmunkIcon" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Chipmunk" />
+    <Property Id="WixShellExecTarget" Value="[#ChipmunkExe]" />
+    <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+    <UI>
+      <UIRef Id="WixUI_InstallDir" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed</Publish>
+    </UI>
+    <WixVariable Id="WixUILicenseRtf" Value="{license}" />
+    <Feature Id="DefaultFeature" Title="Chipmunk" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="Chipmunk" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Chipmunk" />
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="ChipmunkExecutable" Guid="*">
+        <File Id="ChipmunkExe" Source="{exe}" KeyPath="yes" />
+      </Component>
+      <Component Id="ChipmunkReadme" Guid="*">
+        <File Id="ChipmunkReadmeFile" Source="{readme}" KeyPath="yes" />
+      </Component>
+      <Component Id="ChipmunkStartMenuShortcut" Guid="*">
+        <Shortcut Id="ApplicationStartMenuShortcut" Directory="ApplicationProgramsFolder" Name="Chipmunk" Description="Launch Chipmunk" Target="[#ChipmunkExe]" WorkingDirectory="INSTALLFOLDER" Icon="ChipmunkIcon" />
+        <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\\ESR Labs\\Chipmunk" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
+""".format(
+            installer_version=installer_version(version),
+            upgrade_code=WINDOWS_UPGRADE_CODE,
+            icon=xml_attr(icon),
+            license=xml_attr(license_rtf),
+            exe=xml_attr(exe),
+            readme=xml_attr(readme),
+        ),
+        encoding="utf-8",
+    )
+
+
+def write_windows_license_rtf(path):
+    path.write_text(
+        r"{\rtf1\ansi\deff0{\fonttbl{\f0 Arial;}}\f0\fs20 "
+        r"Chipmunk\par\par "
+        r"Install Chipmunk, a fast desktop application for viewing log files. "
+        r"See the bundled README.md for project information.\par"
+        r"}",
+        encoding="utf-8",
+    )
+
+
+def package_linux_update_binary(version):
+    update_binary = app_release_path() / "chipmunk@{}-{}".format(
+        version, linux_update_platform_name()
+    )
+    shutil.copy2(app_binary_path(), update_binary)
+    update_binary.chmod(0o755)
+
+    return update_binary
 
 
 def sign_app(app_root):
@@ -268,6 +492,31 @@ def signing_allowed():
     return all(os.environ.get(name) for name in required) and "SKIP_NOTARIZE" not in os.environ
 
 
+def installer_signing_allowed():
+    required = ["APPLEID", "APPLEIDPASS", "TEAMID", "INSTALLER_SIGNING_ID"]
+    if not all(os.environ.get(name) for name in required) or "SKIP_NOTARIZE" in os.environ:
+        return False
+
+    if "Developer ID Installer" not in os.environ["INSTALLER_SIGNING_ID"]:
+        return False
+
+    return True
+
+
+def warn_unsigned_macos_pkg():
+    print(
+        "Creating unsigned macOS PKG. PKG signing requires a Developer ID Installer "
+        "certificate imported into the CI keychain; the Developer ID Application "
+        "identity used by SIGNING_ID cannot sign installer packages.",
+        file=sys.stderr,
+    )
+
+
+def windows_signing_allowed():
+    required = ["WINDOWS_SIGNING_CERT_PFX", "WINDOWS_SIGNING_CERT_PASSWORD"]
+    return all(os.environ.get(name) for name in required)
+
+
 def require_env(name):
     value = os.environ.get(name)
     if not value:
@@ -279,6 +528,88 @@ def run(command, error, cwd=None):
     result = subprocess.run(command, cwd=cwd)
     if result.returncode != 0:
         raise RuntimeError(error)
+
+
+def installer_version(version):
+    core = version.split("+", 1)[0].split("-", 1)[0]
+    parts = core.split(".")
+    if len(parts) < 3 or not all(part.isdigit() for part in parts[:3]):
+        raise RuntimeError("Version cannot be used for installer metadata: {}".format(version))
+
+    return ".".join(parts[:3])
+
+
+def xml_attr(value):
+    return (
+        str(value)
+        .replace("&", "&amp;")
+        .replace('"', "&quot;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
+def find_windows_tool(name):
+    found = shutil.which(name)
+    if found is not None:
+        return Path(found)
+
+    roots = []
+    for env_name in ["WIX", "ProgramFiles(x86)", "ProgramFiles"]:
+        value = os.environ.get(env_name)
+        if value:
+            roots.append(Path(value))
+
+    for root in roots:
+        if not root.exists():
+            continue
+        matches = sorted(root.rglob(name), reverse=True)
+        if matches:
+            return matches[0]
+
+    raise RuntimeError(
+        "Required Windows packaging tool '{}' was not found on PATH.".format(name)
+    )
+
+
+def sign_windows_file(path):
+    if not windows_signing_allowed():
+        print(
+            "Skipping Windows code signing because WINDOWS_SIGNING_CERT_PFX or "
+            "WINDOWS_SIGNING_CERT_PASSWORD is missing.",
+            file=sys.stderr,
+        )
+        return
+
+    signtool = find_windows_tool("signtool.exe")
+    cert = app_release_path() / "windows-signing.pfx"
+    cert.write_bytes(base64.b64decode(require_env("WINDOWS_SIGNING_CERT_PFX")))
+
+    timestamp_url = os.environ.get("WINDOWS_SIGNING_TIMESTAMP_URL", DEFAULT_WINDOWS_TIMESTAMP_URL)
+    try:
+        run(
+            [
+                str(signtool),
+                "sign",
+                "/fd",
+                "SHA256",
+                "/tr",
+                timestamp_url,
+                "/td",
+                "SHA256",
+                "/f",
+                str(cert),
+                "/p",
+                require_env("WINDOWS_SIGNING_CERT_PASSWORD"),
+                str(path),
+            ],
+            error="Signing Windows artifact failed",
+        )
+    finally:
+        try:
+            cert.unlink()
+        except FileNotFoundError:
+            pass
 
 
 def repo_root():
@@ -320,6 +651,10 @@ def icon_path():
     return app_root() / "data" / "mac" / "chipmunk.icns"
 
 
+def windows_icon_path():
+    return app_root() / "data" / "win" / "chipmunk.ico"
+
+
 def entitlements_path():
     return app_root() / "data" / "mac" / "entitlements.mac.plist"
 
@@ -341,6 +676,17 @@ def platform_name():
         name += "-arm64"
 
     return name
+
+
+def linux_update_platform_name():
+    machine = platform.machine().lower()
+
+    if machine in {"arm64", "aarch64"}:
+        return "linux-arm64"
+    if machine in {"x86_64", "amd64"}:
+        return "linux-x86_64"
+
+    raise RuntimeError("Unsupported Linux update architecture: {}".format(machine))
 
 
 def is_macos():

@@ -3,13 +3,12 @@ name: BuildAndReleaseMaster
 on:
   push:
     tags:
-      - "*"
-      - "!*.*.*-alpha.*"
+      - "*.*.*-legacy.*"
 
 jobs:
   create_release:
     name: Create release
-    if: ${{ !contains(github.ref_name, '-alpha.') }}
+    if: ${{ contains(github.ref_name, '-legacy.') }}
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -29,7 +28,7 @@ jobs:
           name: ${{ github.ref_name }}
   build_release:
     name: Build release
-    if: ${{ !contains(github.ref_name, '-alpha.') }}
+    if: ${{ contains(github.ref_name, '-legacy.') }}
     needs: create_release
     runs-on: ${{ matrix.os }}
     env:
@@ -142,7 +141,7 @@ jobs:
 
   build_release_ubuntu20:
     name: Build release for Ubuntu 20.04
-    if: ${{ !contains(github.ref_name, '-alpha.') }}
+    if: ${{ contains(github.ref_name, '-legacy.') }}
     needs: create_release
     runs-on: ubuntu-latest
     steps:
@@ -171,7 +170,7 @@ jobs:
 
   invoke_package_distribution:
     name: Invoke chipmunk package creation and distribution for different package managers
-    if: ${{ !contains(github.ref_name, '-alpha.') }}
+    if: ${{ contains(github.ref_name, '-legacy.') }}
     needs: build_release
     runs-on: ubuntu-latest
     steps:
